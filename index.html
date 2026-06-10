@@ -364,9 +364,9 @@ tr:hover td{background:#fafafa}
   <div class="modal" style="max-width:560px">
     <h3>Importar alumnos fijos</h3>
     <div class="msub">Exportá la hoja <strong>Alumnos Fijos</strong> de Google Sheets como CSV (Archivo → Descargar → CSV) y pegá el contenido acá. El sistema limpia el formato de WhatsApp automáticamente.</div>
-    <div class="msub" style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12px;font-family:monospace;margin-bottom:14px">Columnas esperadas: Celular, Nombre, Apellido, Dia, HoraInicio</div>
+    <div class="msub" style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12px;font-family:monospace;margin-bottom:14px">Columnas esperadas: Nombre, Apellido, Celular, Dia, HoraInicio</div>
     <div class="fg"><label>CSV (pegá el contenido acá)</label>
-      <textarea id="import-fijos-csv" rows="8" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-size:12px;font-family:monospace;resize:vertical" placeholder="Celular,Nombre,Apellido,Dia,HoraInicio&#10;5493416438271@s.whatsapp.net,María,García,Lunes,8:00"></textarea>
+      <textarea id="import-fijos-csv" rows="8" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-size:12px;font-family:monospace;resize:vertical" placeholder="Nombre,Apellido,Celular,Dia,HoraInicio&#10;María,García,5493416438271@s.whatsapp.net,Lunes,8:00"></textarea>
     </div>
     <div class="alert alert-e" id="import-fijos-err"></div>
     <div class="alert alert-s" id="import-fijos-ok">✅ Importación completada.</div>
@@ -382,9 +382,9 @@ tr:hover td{background:#fafafa}
   <div class="modal" style="max-width:560px">
     <h3>Importar turnos puntuales</h3>
     <div class="msub">Exportá la hoja <strong>Turnos</strong> de Google Sheets como CSV y pegá el contenido acá.</div>
-    <div class="msub" style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12px;font-family:monospace;margin-bottom:14px">Columnas esperadas: Celular, Nombre, Apellido, Fecha, Dia, HoraInicio</div>
+    <div class="msub" style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12px;font-family:monospace;margin-bottom:14px">Columnas esperadas: Nombre, Apellido, Celular, Fecha, Dia, HoraInicio</div>
     <div class="fg"><label>CSV (pegá el contenido acá)</label>
-      <textarea id="import-turnos-csv" rows="8" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-size:12px;font-family:monospace;resize:vertical" placeholder="Celular,Nombre,Apellido,Fecha,Dia,HoraInicio&#10;5493416438271@s.whatsapp.net,María,García,10-06-2026,Martes,9:00"></textarea>
+      <textarea id="import-turnos-csv" rows="8" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-size:12px;font-family:monospace;resize:vertical" placeholder="Nombre,Apellido,Celular,Fecha,Dia,HoraInicio&#10;María,García,5493416438271@s.whatsapp.net,10-06-2026,Martes,9:00"></textarea>
     </div>
     <div class="alert alert-e" id="import-turnos-err"></div>
     <div class="alert alert-s" id="import-turnos-ok">✅ Importación completada.</div>
@@ -400,9 +400,9 @@ tr:hover td{background:#fafafa}
   <div class="modal" style="max-width:560px">
     <h3>Importar cancelaciones</h3>
     <div class="msub">Exportá la hoja <strong>Cancelaciones</strong> de Google Sheets como CSV y pegá el contenido acá.</div>
-    <div class="msub" style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12px;font-family:monospace;margin-bottom:14px">Columnas esperadas: Celular, Nombre, Apellido, Fecha, Dia, HoraInicio<br>Opcional: Multa (SI/NO o TRUE/FALSE)</div>
+    <div class="msub" style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12px;font-family:monospace;margin-bottom:14px">Columnas esperadas: Nombre, Apellido, Celular, HoraInicio, FechaExacta<br>La columna HoraAviso se ignora automáticamente.</div>
     <div class="fg"><label>CSV</label>
-      <textarea id="import-cancels-csv" rows="8" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-size:12px;font-family:monospace;resize:vertical" placeholder="Celular,Nombre,Apellido,Fecha,Dia,HoraInicio,Multa&#10;5493416438271@s.whatsapp.net,María,García,10-06-2026,Martes,9:00,NO"></textarea>
+      <textarea id="import-cancels-csv" rows="8" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-size:12px;font-family:monospace;resize:vertical" placeholder="Nombre,Apellido,Celular,HoraInicio,FechaExacta,HoraAviso&#10;María,García,5493416438271@s.whatsapp.net,9:00,10-06-2026,08:52"></textarea>
     </div>
     <div class="alert alert-e" id="import-cancels-err"></div>
     <div class="alert alert-s" id="import-cancels-ok"></div>
@@ -1227,17 +1227,21 @@ async function importarCancelaciones() {
   if(!rows.length) { showAlert('import-cancels-err','No se encontraron datos válidos.'); return; }
   loading(true);
   const records = rows.map(r=>{
-    const multaRaw = (r['Multa']||r['multa']||'').toLowerCase();
+    const fechaVal = r['FechaExacta']||r['Fecha']||r['fecha']||'';
+    let diaVal = r['Dia']||r['dia']||'';
+    if(!diaVal && fechaVal) {
+      try { diaVal = getNombreDia(parseDate(fechaVal)); } catch(e) {}
+    }
     return {
       user_id:  null,
       nombre:   r['Nombre']||r['nombre']||'',
       apellido: r['Apellido']||r['apellido']||'',
       phone:    cleanPhone(r['Celular']||r['celular']||''),
-      fecha:    r['Fecha']||r['fecha']||'',
-      dia:      r['Dia']||r['dia']||'',
+      fecha:    fechaVal,
+      dia:      diaVal,
       hora:     r['HoraInicio']||r['Hora']||r['hora']||'',
-      tipo:     r['Tipo']||r['tipo']||'puntual',
-      multa:    multaRaw==='si'||multaRaw==='true'||multaRaw==='1',
+      tipo:     'puntual',
+      multa:    false,
     };
   }).filter(r=>r.nombre&&r.fecha&&r.hora);
   const { error } = await sb.from('cancelaciones').insert(records);
