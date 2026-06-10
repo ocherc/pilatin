@@ -1028,7 +1028,9 @@ function renderAdminAgenda() {
         ${(HORARIOS[dia]||[]).map(hora=>{
           const pts=allTurnos.filter(t=>t.fecha===fecha&&t.hora===hora);
           const fixC=allCancels.filter(c=>c.fecha===fecha&&c.hora===hora&&c.tipo==='fijo_puntual');
-          const fixA=allFijos.filter(f=>f.dia===dia&&f.hora===hora).filter(f=>!fixC.find(c=>c.user_id===f.user_id));
+          const phoneMatch=(a,b)=>{const pa=a||'',pb=b||''; return pa&&pb&&(pa===pb||pa.endsWith(pb)||pb.endsWith(pa));};
+          const canceloFijo=(f)=>fixC.find(c=>c.user_id&&f.user_id?c.user_id===f.user_id:phoneMatch(c.phone,f.phone));
+          const fixA=allFijos.filter(f=>f.dia===dia&&f.hora===hora).filter(f=>!canceloFijo(f));
           const occ=pts.length+fixA.length;
           const todos=[...pts.map(t=>({...t,_t:'Puntual'})),...fixA.map(f=>({...f,_t:'Fijo'}))];
           return `<div class="ag-hour">
