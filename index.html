@@ -483,12 +483,14 @@ const FERIADOS = {
 function esFeriado(d) { return !!FERIADOS[formatDate(d)]; }
 function esCerrado(d) {
   const fecha = formatDate(d);
-  return !!FERIADOS[fecha] || allDiasCerrados.some(c => c.fecha === fecha);
+  if(allDiasCerrados.some(c => c.fecha === fecha && c.tipo === 'apertura')) return false;
+  if(FERIADOS[fecha]) return true;
+  return allDiasCerrados.some(c => c.fecha === fecha && c.tipo !== 'apertura');
 }
 function labelCerrado(d) {
   const fecha = formatDate(d);
   if(FERIADOS[fecha]) return 'Feriado — ' + FERIADOS[fecha];
-  const dc = allDiasCerrados.find(c => c.fecha === fecha);
+  const dc = allDiasCerrados.find(c => c.fecha === fecha && c.tipo !== 'apertura');
   return dc ? (dc.motivo || 'Día cerrado') : '';
 }
 
@@ -527,7 +529,6 @@ function getNext30Days() {
   return days;
 }
 function getNext7DaysAll() {
-  // Includes feriados — for admin agenda display only
   const days=[], t=new Date();
   for(let i=0;i<20&&days.length<7;i++){
     const d=new Date(t); d.setDate(t.getDate()+i);
@@ -1244,54 +1245,81 @@ function renderAdminLibres() {
 }
 
 // ── ADMIN: días cerrados ──
+const inputStyle = 'width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-size:14px;outline:none';
 function renderAdminCerrados() {
-  const lista = [...allDiasCerrados].sort((a,b)=>a.fecha>b.fecha?1:-1);
+  const cerrados  = allDiasCerrados.filter(c=>c.tipo!=='apertura').sort((a,b)=>a.fecha>b.fecha?1:-1);
+  const aperturas = allDiasCerrados.filter(c=>c.tipo==='apertura');
+  const hoy = formatDate(new Date());
+  const feriadosRows = Object.entries(FERIADOS)
+    .filter(([f])=>f>=hoy).sort(([a],[b])=>a>b?1:-1)
+    .map(([fecha,nombre])=>{
+      const ap = aperturas.find(a=>a.fecha===fecha);
+      return ap
+        ? `<tr><td><strong>${fecha.slice(0,5)}</strong></td><td>${getNombreDia(parseDate(fecha))}</td><td>${nombre}</td><td><span class="badge b-green">Abierto</span></td><td><button class="btn btn-outline btn-sm" onclick="adminCerrarFeriado('${ap.id}')">Volver a cerrar</button></td></tr>`
+        : `<tr><td><strong>${fecha.slice(0,5)}</strong></td><td>${getNombreDia(parseDate(fecha))}</td><td>${nombre}</td><td><span class="badge b-gray">Cerrado</span></td><td><button class="btn btn-primary btn-sm" onclick="adminAbrirFeriado('${fecha}','${nombre}')">Abrir este día</button></td></tr>`;
+    }).join('');
   document.getElementById('admin-cerrados').innerHTML = `
     <div class="card">
-      <div class="card-title">Agregar día cerrado</div>
+      <div class="card-title">Agregar días cerrados</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
-        <div class="fg" style="margin:0;flex:1;min-width:150px">
-          <label>Fecha</label>
-          <input type="date" id="dc-fecha" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-size:14px;outline:none">
+        <div class="fg" style="margin:0;flex:1;min-width:140px">
+          <label>Desde</label>
+          <input type="date" id="dc-desde" style="${inputStyle}">
         </div>
-        <div class="fg" style="margin:0;flex:2;min-width:180px">
+        <div class="fg" style="margin:0;flex:1;min-width:140px">
+          <label style="text-transform:none;letter-spacing:0">Hasta <span style="font-weight:400;color:var(--muted)">(opcional)</span></label>
+          <input type="date" id="dc-hasta" style="${inputStyle}">
+        </div>
+        <div class="fg" style="margin:0;flex:2;min-width:160px">
           <label>Motivo</label>
-          <input type="text" id="dc-motivo" placeholder="Vacaciones, feria, etc." style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-size:14px;outline:none">
+          <input type="text" id="dc-motivo" placeholder="Vacaciones, feria, etc." style="${inputStyle}">
         </div>
         <button class="btn btn-primary btn-sm" style="height:42px;white-space:nowrap" onclick="adminAddCerrado()">+ Agregar</button>
       </div>
       <div class="alert alert-e" id="dc-err" style="margin-top:10px"></div>
     </div>
     <div class="card">
-      <div class="card-title">Días cerrados programados (${lista.length})</div>
-      ${lista.length
-        ? `<div class="tw"><table>
-            <tr><th>Fecha</th><th>Día</th><th>Motivo</th><th></th></tr>
-            ${lista.map(dc=>`<tr>
-              <td><strong>${dc.fecha.slice(0,5)}</strong></td>
-              <td>${getNombreDia(parseDate(dc.fecha))}</td>
-              <td>${dc.motivo||'—'}</td>
-              <td><button class="btn btn-danger btn-sm" onclick="adminDelCerrado('${dc.id}')">Eliminar</button></td>
-            </tr>`).join('')}
-           </table></div>`
-        : '<div class="empty-state"><div class="icon">✅</div><p>No hay días cerrados programados.</p></div>'}
+      <div class="card-title">Feriados del año</div>
+      ${feriadosRows ? `<div class="tw"><table><tr><th>Fecha</th><th>Día</th><th>Nombre</th><th>Estado</th><th></th></tr>${feriadosRows}</table></div>`
+        : '<p style="color:var(--muted);font-size:.9rem;padding:12px 0">No hay más feriados en el año.</p>'}
+    </div>
+    <div class="card">
+      <div class="card-title">Días cerrados personalizados (${cerrados.length})</div>
+      ${cerrados.length
+        ? `<div class="tw"><table><tr><th>Fecha</th><th>Día</th><th>Motivo</th><th></th></tr>
+           ${cerrados.map(dc=>`<tr>
+             <td><strong>${dc.fecha.slice(0,5)}</strong></td>
+             <td>${getNombreDia(parseDate(dc.fecha))}</td>
+             <td>${dc.motivo||'—'}</td>
+             <td><button class="btn btn-danger btn-sm" onclick="adminDelCerrado('${dc.id}')">Eliminar</button></td>
+           </tr>`).join('')}</table></div>`
+        : '<div class="empty-state"><div class="icon">✅</div><p>No hay días cerrados personalizados.</p></div>'}
     </div>`;
 }
 async function adminAddCerrado() {
   hideAlert('dc-err');
-  const dateVal = document.getElementById('dc-fecha').value;
-  const motivo  = document.getElementById('dc-motivo').value.trim();
-  if(!dateVal) { showAlert('dc-err','Elegí una fecha.'); return; }
-  const [y,m,d] = dateVal.split('-');
-  const fecha = `${d}-${m}-${y}`;
-  const dateObj = parseDate(fecha);
-  if(!HORARIOS[getNombreDia(dateObj)]) { showAlert('dc-err','Solo se pueden cerrar días laborales (lunes a viernes).'); return; }
-  if(allDiasCerrados.some(c=>c.fecha===fecha)) { showAlert('dc-err','Esa fecha ya está marcada como cerrada.'); return; }
+  const desdeVal = document.getElementById('dc-desde').value;
+  const hastaVal = document.getElementById('dc-hasta').value;
+  const motivo   = document.getElementById('dc-motivo').value.trim();
+  if(!desdeVal) { showAlert('dc-err','Elegí al menos la fecha de inicio.'); return; }
+  const toDate = s => { const [y,m,d]=s.split('-'); return new Date(+y,+m-1,+d); };
+  const desde = toDate(desdeVal);
+  const hasta = hastaVal ? toDate(hastaVal) : new Date(desde);
+  if(hasta < desde) { showAlert('dc-err','La fecha "Hasta" debe ser igual o posterior a "Desde".'); return; }
+  const records = [];
+  const cur = new Date(desde);
+  while(cur <= hasta) {
+    const fecha = formatDate(cur);
+    if(HORARIOS[getNombreDia(cur)] && !FERIADOS[fecha] && !allDiasCerrados.some(c=>c.fecha===fecha))
+      records.push({ fecha, motivo, tipo:'cerrado' });
+    cur.setDate(cur.getDate()+1);
+  }
+  if(!records.length) { showAlert('dc-err','No hay días hábiles nuevos para cerrar en ese rango (ya están cerrados, son feriados o fines de semana).'); return; }
   loading(true);
-  const { error } = await sb.from('dias_cerrados').insert({ fecha, motivo });
+  const { error } = await sb.from('dias_cerrados').insert(records);
   if(error) { loading(false); showAlert('dc-err','Error: '+error.message); return; }
   await fetchAll(); loading(false);
-  document.getElementById('dc-fecha').value=''; document.getElementById('dc-motivo').value='';
+  document.getElementById('dc-desde').value=''; document.getElementById('dc-hasta').value=''; document.getElementById('dc-motivo').value='';
   renderAdminCerrados();
 }
 async function adminDelCerrado(id) {
@@ -1300,6 +1328,19 @@ async function adminDelCerrado(id) {
   await sb.from('dias_cerrados').delete().eq('id',id);
   await fetchAll(); loading(false);
   renderAdminCerrados();
+}
+async function adminAbrirFeriado(fecha, nombre) {
+  if(!confirm(`¿Abrir el estudio el ${fecha} (${nombre})? Los alumnos podrán reservar ese día.`)) return;
+  loading(true);
+  const { error } = await sb.from('dias_cerrados').insert({ fecha, motivo: nombre, tipo:'apertura' });
+  if(error) { loading(false); alert('Error: '+error.message); return; }
+  await fetchAll(); loading(false); renderAdminCerrados();
+}
+async function adminCerrarFeriado(id) {
+  if(!confirm('¿Volver a cerrar este feriado?')) return;
+  loading(true);
+  await sb.from('dias_cerrados').delete().eq('id',id);
+  await fetchAll(); loading(false); renderAdminCerrados();
 }
 
 // ── ADMIN: add manual slot ──
