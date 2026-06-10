@@ -1298,15 +1298,21 @@ async function importarCancelaciones() {
       try { diaVal = getNombreDia(parseDate(fechaVal)); } catch(e) {}
     }
     diaVal = normalizeDia(diaVal);
+    const phone = cleanPhone(r['Celular']||r['celular']||'');
+    const hora  = r['HoraInicio']||r['Hora']||r['hora']||'';
+    const esFijo = allFijos.some(f => {
+      const fp = f.phone||'';
+      return (fp===phone||fp.endsWith(phone)||phone.endsWith(fp)) && f.hora===hora && f.dia===diaVal;
+    });
     return {
       user_id:  null,
       nombre:   r['Nombre']||r['nombre']||'',
       apellido: r['Apellido']||r['apellido']||'',
-      phone:    cleanPhone(r['Celular']||r['celular']||''),
+      phone,
       fecha:    fechaVal,
       dia:      diaVal,
-      hora:     r['HoraInicio']||r['Hora']||r['hora']||'',
-      tipo:     'puntual',
+      hora,
+      tipo:     esFijo ? 'fijo_puntual' : 'puntual',
       multa:    false,
     };
   }).filter(r=>r.nombre&&r.fecha&&r.hora);
