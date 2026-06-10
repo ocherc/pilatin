@@ -268,6 +268,7 @@ tr:hover td{background:#fafafa}
         <button class="btn btn-outline btn-sm" id="abtn-fijos"        onclick="showAdminSec('fijos')">📌 Fijos</button>
         <button class="btn btn-outline btn-sm" id="abtn-puntuales"    onclick="showAdminSec('puntuales')">📋 Puntuales</button>
         <button class="btn btn-outline btn-sm" id="abtn-cancelaciones" onclick="showAdminSec('cancelaciones')">❌ Cancelaciones</button>
+        <button class="btn btn-outline btn-sm" id="abtn-libres"        onclick="showAdminSec('libres')">🟢 Turnos libres</button>
         <button class="btn btn-outline btn-sm" style="border-color:#a855f7;color:#a855f7" onclick="document.getElementById('modal-import-fijos').classList.add('show')">⬆ Importar fijos</button>
         <button class="btn btn-outline btn-sm" style="border-color:#a855f7;color:#a855f7" onclick="document.getElementById('modal-import-turnos').classList.add('show')">⬆ Importar turnos</button>
         <button class="btn btn-outline btn-sm" style="border-color:#a855f7;color:#a855f7" onclick="document.getElementById('modal-import-cancels').classList.add('show')">⬆ Importar cancelaciones</button>
@@ -277,6 +278,7 @@ tr:hover td{background:#fafafa}
       <div id="admin-fijos"         class="hidden"></div>
       <div id="admin-puntuales"     class="hidden"></div>
       <div id="admin-cancelaciones" class="hidden"></div>
+      <div id="admin-libres"        class="hidden"></div>
     </div>
 
   </div>
@@ -1005,12 +1007,12 @@ function renderAdmin() {
 }
 
 function showAdminSec(sec) {
-  ['agenda','alumnos','fijos','puntuales','cancelaciones'].forEach(s=>{
+  ['agenda','alumnos','fijos','puntuales','cancelaciones','libres'].forEach(s=>{
     document.getElementById('admin-'+s).classList.toggle('hidden',s!==sec);
     const btn=document.getElementById('abtn-'+s);
     if(btn){ btn.classList.toggle('btn-primary',s===sec); btn.classList.toggle('btn-outline',s!==sec); }
   });
-  ({agenda:renderAdminAgenda,alumnos:renderAdminAlumnos,fijos:renderAdminFijos,puntuales:renderAdminPuntuales,cancelaciones:renderAdminCancelaciones})[sec]?.();
+  ({agenda:renderAdminAgenda,alumnos:renderAdminAlumnos,fijos:renderAdminFijos,puntuales:renderAdminPuntuales,cancelaciones:renderAdminCancelaciones,libres:renderAdminLibres})[sec]?.();
 }
 
 function renderAdminAgenda() {
@@ -1130,6 +1132,62 @@ function renderAdminCancelaciones() {
           </tr>`).join('')
         :'<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:28px">Sin cancelaciones.</td></tr>'}
       </table></div>
+    </div>`;
+}
+
+// ── ADMIN: turnos libres ──
+function renderAdminLibres() {
+  const days = getNext30Days().slice(0, 7);
+  const allHours = ['7:00','8:00','9:00','16:00','17:00','18:00','19:00'];
+
+  const cellStyle = (lib) => {
+    if(lib === null) return 'color:var(--muted);text-align:center';
+    const color = lib === 0 ? 'var(--danger)' : lib <= 2 ? '#d97706' : '#15803d';
+    return `text-align:center;font-weight:700;color:${color}`;
+  };
+
+  // Tabla 1: próximos 7 días (puntuales libres, contando fijos)
+  const tabla1 = days.map(d => {
+    const fecha = formatDate(d), dia = getNombreDia(d);
+    const horas = HORARIOS[dia] || [];
+    return `<tr>
+      <td><strong>${DIAS_ABR[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}</strong></td>
+      ${allHours.map(h => {
+        if(!horas.includes(h)) return '<td style="color:var(--muted);text-align:center">—</td>';
+        const lib = cuposLibres(fecha, h);
+        return `<td style="${cellStyle(lib)}">${lib}</td>`;
+      }).join('')}
+    </tr>`;
+  }).join('');
+
+  // Tabla 2: cupos fijos disponibles permanentes por día de semana
+  const tabla2 = DIAS_SEMANA.map(dia => {
+    const horas = HORARIOS[dia] || [];
+    return `<tr>
+      <td><strong>${dia}</strong></td>
+      ${allHours.map(h => {
+        if(!horas.includes(h)) return '<td style="color:var(--muted);text-align:center">—</td>';
+        const lib = cuposLibresFijo(dia, h);
+        return `<td style="${cellStyle(lib)}">${lib}</td>`;
+      }).join('')}
+    </tr>`;
+  }).join('');
+
+  const headers = `<tr><th>Día</th>${allHours.map(h=>`<th>${h}hs</th>`).join('')}</tr>`;
+
+  document.getElementById('admin-libres').innerHTML = `
+    <div class="card">
+      <div class="card-title">Cupos libres — Próximos 7 días <span style="font-size:11px;font-weight:400;color:var(--muted)">(fijos + puntuales)</span></div>
+      <div class="tw"><table>${headers}${tabla1}</table></div>
+      <div style="margin-top:10px;font-size:12px;color:var(--muted);display:flex;gap:16px">
+        <span style="color:#15803d;font-weight:700">● 3–6</span>
+        <span style="color:#d97706;font-weight:700">● 1–2</span>
+        <span style="color:var(--danger);font-weight:700">● 0 lleno</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Vacantes para alumnos fijos <span style="font-size:11px;font-weight:400;color:var(--muted)">(cupos permanentes disponibles)</span></div>
+      <div class="tw"><table>${headers}${tabla2}</table></div>
     </div>`;
 }
 
