@@ -184,7 +184,7 @@ tr:hover td{background:#fafafa}
       <div class="fg"><label>Nombre</label><input type="text" id="reg-nombre" placeholder="María"></div>
       <div class="fg"><label>Apellido</label><input type="text" id="reg-apellido" placeholder="García"></div>
     </div>
-    <div class="fg"><label>Teléfono (sin +54)</label><input type="tel" id="reg-tel" placeholder="1166420683"></div>
+    <div class="fg"><label>Teléfono</label><input type="tel" id="reg-tel" placeholder="3416438271"><div style="font-size:11px;color:var(--muted);margin-top:4px">Sin el 0 de la característica y sin el 15. Ej: si tu número es <strong>0341 15-643-8271</strong> escribí <strong>3416438271</strong></div></div>
     <button class="btn btn-primary btn-w" onclick="doRegister()">Crear cuenta</button>
     <div class="form-footer">¿Ya tenés cuenta? <a onclick="showPage('page-login')">Iniciá sesión</a></div>
   </div>
@@ -268,6 +268,9 @@ tr:hover td{background:#fafafa}
         <button class="btn btn-outline btn-sm" id="abtn-fijos"        onclick="showAdminSec('fijos')">📌 Fijos</button>
         <button class="btn btn-outline btn-sm" id="abtn-puntuales"    onclick="showAdminSec('puntuales')">📋 Puntuales</button>
         <button class="btn btn-outline btn-sm" id="abtn-cancelaciones" onclick="showAdminSec('cancelaciones')">❌ Cancelaciones</button>
+        <button class="btn btn-outline btn-sm" style="border-color:#a855f7;color:#a855f7" onclick="document.getElementById('modal-import-fijos').classList.add('show')">⬆ Importar fijos</button>
+        <button class="btn btn-outline btn-sm" style="border-color:#a855f7;color:#a855f7" onclick="document.getElementById('modal-import-turnos').classList.add('show')">⬆ Importar turnos</button>
+        <button class="btn btn-outline btn-sm" style="border-color:#a855f7;color:#a855f7" onclick="document.getElementById('modal-import-cancels').classList.add('show')">⬆ Importar cancelaciones</button>
       </div>
       <div id="admin-agenda"></div>
       <div id="admin-alumnos"       class="hidden"></div>
@@ -352,6 +355,60 @@ tr:hover td{background:#fafafa}
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal('modal-faltar')">Cancelar</button>
       <button class="btn btn-accent"  onclick="confirmFaltar()">Confirmar ausencia</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: IMPORTAR FIJOS ══ -->
+<div class="modal-overlay" id="modal-import-fijos">
+  <div class="modal" style="max-width:560px">
+    <h3>Importar alumnos fijos</h3>
+    <div class="msub">Exportá la hoja <strong>Alumnos Fijos</strong> de Google Sheets como CSV (Archivo → Descargar → CSV) y pegá el contenido acá. El sistema limpia el formato de WhatsApp automáticamente.</div>
+    <div class="msub" style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12px;font-family:monospace;margin-bottom:14px">Columnas esperadas: Celular, Nombre, Apellido, Dia, HoraInicio</div>
+    <div class="fg"><label>CSV (pegá el contenido acá)</label>
+      <textarea id="import-fijos-csv" rows="8" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-size:12px;font-family:monospace;resize:vertical" placeholder="Celular,Nombre,Apellido,Dia,HoraInicio&#10;5493416438271@s.whatsapp.net,María,García,Lunes,8:00"></textarea>
+    </div>
+    <div class="alert alert-e" id="import-fijos-err"></div>
+    <div class="alert alert-s" id="import-fijos-ok">✅ Importación completada.</div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-import-fijos')">Cerrar</button>
+      <button class="btn btn-primary" onclick="importarFijos()">Importar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: IMPORTAR TURNOS ══ -->
+<div class="modal-overlay" id="modal-import-turnos">
+  <div class="modal" style="max-width:560px">
+    <h3>Importar turnos puntuales</h3>
+    <div class="msub">Exportá la hoja <strong>Turnos</strong> de Google Sheets como CSV y pegá el contenido acá.</div>
+    <div class="msub" style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12px;font-family:monospace;margin-bottom:14px">Columnas esperadas: Celular, Nombre, Apellido, Fecha, Dia, HoraInicio</div>
+    <div class="fg"><label>CSV (pegá el contenido acá)</label>
+      <textarea id="import-turnos-csv" rows="8" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-size:12px;font-family:monospace;resize:vertical" placeholder="Celular,Nombre,Apellido,Fecha,Dia,HoraInicio&#10;5493416438271@s.whatsapp.net,María,García,10-06-2026,Martes,9:00"></textarea>
+    </div>
+    <div class="alert alert-e" id="import-turnos-err"></div>
+    <div class="alert alert-s" id="import-turnos-ok">✅ Importación completada.</div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-import-turnos')">Cerrar</button>
+      <button class="btn btn-primary" onclick="importarTurnos()">Importar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: IMPORTAR CANCELACIONES ══ -->
+<div class="modal-overlay" id="modal-import-cancels">
+  <div class="modal" style="max-width:560px">
+    <h3>Importar cancelaciones</h3>
+    <div class="msub">Exportá la hoja <strong>Cancelaciones</strong> de Google Sheets como CSV y pegá el contenido acá.</div>
+    <div class="msub" style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12px;font-family:monospace;margin-bottom:14px">Columnas esperadas: Celular, Nombre, Apellido, Fecha, Dia, HoraInicio<br>Opcional: Multa (SI/NO o TRUE/FALSE)</div>
+    <div class="fg"><label>CSV</label>
+      <textarea id="import-cancels-csv" rows="8" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-size:12px;font-family:monospace;resize:vertical" placeholder="Celular,Nombre,Apellido,Fecha,Dia,HoraInicio,Multa&#10;5493416438271@s.whatsapp.net,María,García,10-06-2026,Martes,9:00,NO"></textarea>
+    </div>
+    <div class="alert alert-e" id="import-cancels-err"></div>
+    <div class="alert alert-s" id="import-cancels-ok"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-import-cancels')">Cerrar</button>
+      <button class="btn btn-primary" onclick="importarCancelaciones()">Importar</button>
     </div>
   </div>
 </div>
@@ -541,6 +598,7 @@ async function doRegister() {
   });
   if(error) { loading(false); showAlert('reg-err', error.message); return; }
   curUser = data.user;
+  if(phone) await sb.rpc('link_user_records', { user_phone: phone });
   await onLogin();
 }
 
@@ -1119,6 +1177,98 @@ async function confirmAddSlot() {
   await fetchAll(); loading(false);
   closeModal('modal-add-slot'); renderAdminAgenda(); renderAdmin();
   alert('✅ Turno agregado para '+nombre+' '+apellido+' el '+displayDate(d)+' a las '+hora+'hs.');
+}
+
+// ════════════════════════════════════════════════
+// IMPORTACIÓN DESDE GOOGLE SHEETS CSV
+// ════════════════════════════════════════════════
+function cleanPhone(raw) {
+  return (raw||'').split('@')[0].replace(/\D/g,'');
+}
+function parseCSV(text) {
+  const lines = text.trim().split('\n').map(l=>l.trim()).filter(Boolean);
+  if(lines.length < 2) return { rows:[] };
+  const headers = lines[0].split(',').map(h=>h.trim().replace(/"/g,''));
+  const rows = lines.slice(1).map(line => {
+    const vals = line.split(',').map(v=>v.trim().replace(/"/g,''));
+    const obj = {};
+    headers.forEach((h,i) => obj[h]=vals[i]||'');
+    return obj;
+  });
+  return { rows };
+}
+async function importarFijos() {
+  hideAlert('import-fijos-err'); hideAlert('import-fijos-ok');
+  const csv = document.getElementById('import-fijos-csv').value;
+  if(!csv.trim()) { showAlert('import-fijos-err','Pegá el contenido CSV primero.'); return; }
+  const { rows } = parseCSV(csv);
+  if(!rows.length) { showAlert('import-fijos-err','No se encontraron datos válidos.'); return; }
+  loading(true);
+  const records = rows.map(r=>({
+    user_id:null,
+    nombre:   r['Nombre']||r['nombre']||'',
+    apellido: r['Apellido']||r['apellido']||'',
+    phone:    cleanPhone(r['Celular']||r['celular']||''),
+    dia:      r['Dia']||r['dia']||'',
+    hora:     r['HoraInicio']||r['Hora']||r['hora']||'',
+  })).filter(r=>r.nombre&&r.dia&&r.hora);
+  const { error } = await sb.from('fijos').insert(records);
+  loading(false);
+  if(error){ showAlert('import-fijos-err','Error: '+error.message); return; }
+  const ok=document.getElementById('import-fijos-ok');
+  ok.textContent=`✅ ${records.length} alumnos fijos importados.`; ok.style.display='block';
+  await fetchAll();
+}
+async function importarCancelaciones() {
+  hideAlert('import-cancels-err'); hideAlert('import-cancels-ok');
+  const csv = document.getElementById('import-cancels-csv').value;
+  if(!csv.trim()) { showAlert('import-cancels-err','Pegá el contenido CSV primero.'); return; }
+  const { rows } = parseCSV(csv);
+  if(!rows.length) { showAlert('import-cancels-err','No se encontraron datos válidos.'); return; }
+  loading(true);
+  const records = rows.map(r=>{
+    const multaRaw = (r['Multa']||r['multa']||'').toLowerCase();
+    return {
+      user_id:  null,
+      nombre:   r['Nombre']||r['nombre']||'',
+      apellido: r['Apellido']||r['apellido']||'',
+      phone:    cleanPhone(r['Celular']||r['celular']||''),
+      fecha:    r['Fecha']||r['fecha']||'',
+      dia:      r['Dia']||r['dia']||'',
+      hora:     r['HoraInicio']||r['Hora']||r['hora']||'',
+      tipo:     r['Tipo']||r['tipo']||'puntual',
+      multa:    multaRaw==='si'||multaRaw==='true'||multaRaw==='1',
+    };
+  }).filter(r=>r.nombre&&r.fecha&&r.hora);
+  const { error } = await sb.from('cancelaciones').insert(records);
+  loading(false);
+  if(error){ showAlert('import-cancels-err','Error: '+error.message); return; }
+  const ok=document.getElementById('import-cancels-ok');
+  ok.textContent=`✅ ${records.length} cancelaciones importadas.`; ok.style.display='block';
+  await fetchAll();
+}
+async function importarTurnos() {
+  hideAlert('import-turnos-err'); hideAlert('import-turnos-ok');
+  const csv = document.getElementById('import-turnos-csv').value;
+  if(!csv.trim()) { showAlert('import-turnos-err','Pegá el contenido CSV primero.'); return; }
+  const { rows } = parseCSV(csv);
+  if(!rows.length) { showAlert('import-turnos-err','No se encontraron datos válidos.'); return; }
+  loading(true);
+  const records = rows.map(r=>({
+    user_id:null,
+    nombre:   r['Nombre']||r['nombre']||'',
+    apellido: r['Apellido']||r['apellido']||'',
+    phone:    cleanPhone(r['Celular']||r['celular']||''),
+    fecha:    r['Fecha']||r['fecha']||'',
+    dia:      r['Dia']||r['dia']||'',
+    hora:     r['HoraInicio']||r['Hora']||r['hora']||'',
+  })).filter(r=>r.nombre&&r.fecha&&r.hora);
+  const { error } = await sb.from('turnos').insert(records);
+  loading(false);
+  if(error){ showAlert('import-turnos-err','Error: '+error.message); return; }
+  const ok=document.getElementById('import-turnos-ok');
+  ok.textContent=`✅ ${records.length} turnos importados.`; ok.style.display='block';
+  await fetchAll();
 }
 
 // ════════════════════════════════════════════════
