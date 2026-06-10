@@ -1064,7 +1064,7 @@ function renderAdminAlumnos() {
         <div class="card-title">Usuarios registrados (${users.length})</div>
         <div class="tw"><table>
           <tr><th>Nombre</th><th>Email</th><th>Teléfono</th></tr>
-          ${users.length?users.map(u=>`<tr><td><strong>${u.nombre} ${u.apellido}</strong></td><td>${u.id}</td><td>${u.phone||'—'}</td></tr>`).join('')
+          ${users.length?users.map(u=>`<tr><td><strong>${u.nombre} ${u.apellido}</strong></td><td>${u.email||'—'}</td><td>${u.phone||'—'}</td></tr>`).join('')
           :'<tr><td colspan="3" style="color:var(--muted);text-align:center;padding:28px">Sin usuarios aún.</td></tr>'}
         </table></div>
       </div>`;
