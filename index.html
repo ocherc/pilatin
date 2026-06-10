@@ -1185,6 +1185,13 @@ async function confirmAddSlot() {
 function cleanPhone(raw) {
   return (raw||'').split('@')[0].replace(/\D/g,'');
 }
+function normalizeDia(raw) {
+  const map = {
+    'lunes':'Lunes','martes':'Martes','miercoles':'Miércoles','miércoles':'Miércoles',
+    'jueves':'Jueves','viernes':'Viernes','sabado':'Sábado','sábado':'Sábado','domingo':'Domingo'
+  };
+  return map[(raw||'').trim().toLowerCase()] || raw;
+}
 function parseCSV(text) {
   const lines = text.trim().split('\n').map(l=>l.trim()).filter(Boolean);
   if(lines.length < 2) return { rows:[] };
@@ -1209,7 +1216,7 @@ async function importarFijos() {
     nombre:   r['Nombre']||r['nombre']||'',
     apellido: r['Apellido']||r['apellido']||'',
     phone:    cleanPhone(r['Celular']||r['celular']||''),
-    dia:      r['Dia']||r['dia']||'',
+    dia:      normalizeDia(r['Dia']||r['dia']||''),
     hora:     r['HoraInicio']||r['Hora']||r['hora']||'',
   })).filter(r=>r.nombre&&r.dia&&r.hora);
   const { error } = await sb.from('fijos').insert(records);
@@ -1232,6 +1239,7 @@ async function importarCancelaciones() {
     if(!diaVal && fechaVal) {
       try { diaVal = getNombreDia(parseDate(fechaVal)); } catch(e) {}
     }
+    diaVal = normalizeDia(diaVal);
     return {
       user_id:  null,
       nombre:   r['Nombre']||r['nombre']||'',
@@ -1264,7 +1272,7 @@ async function importarTurnos() {
     apellido: r['Apellido']||r['apellido']||'',
     phone:    cleanPhone(r['Celular']||r['celular']||''),
     fecha:    r['Fecha']||r['fecha']||'',
-    dia:      r['Dia']||r['dia']||'',
+    dia:      normalizeDia(r['Dia']||r['dia']||''),
     hora:     r['HoraInicio']||r['Hora']||r['hora']||'',
   })).filter(r=>r.nombre&&r.fecha&&r.hora);
   const { error } = await sb.from('turnos').insert(records);
