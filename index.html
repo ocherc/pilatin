@@ -564,11 +564,14 @@ function closeModal(id) { document.getElementById(id).classList.remove('show'); 
 // AVAILABILITY (sobre datos en memoria)
 // ════════════════════════════════════════════════
 function cuposOcupados(fecha, hora) {
-  const dia = getNombreDia(parseDate(fecha));
+  const dia  = getNombreDia(parseDate(fecha));
   const pts  = allTurnos.filter(t=>t.fecha===fecha && t.hora===hora).length;
-  const fixA = allFijos.filter(f=>f.dia===dia && f.hora===hora).length;
-  const fixC = allCancels.filter(c=>c.fecha===fecha && c.hora===hora && c.tipo==='fijo_puntual').length;
-  return pts + Math.max(0, fixA - fixC);
+  const fixos = allFijos.filter(f=>f.dia===dia && f.hora===hora);
+  const fixC = allCancels.filter(c=>
+    c.fecha===fecha && c.hora===hora && c.tipo==='fijo_puntual' &&
+    fixos.some(f=> f.user_id && c.user_id ? f.user_id===c.user_id : phoneMatch(f.phone, c.phone))
+  ).length;
+  return pts + Math.max(0, fixos.length - fixC);
 }
 function cuposOcupadosFijo(dia, hora) {
   return allFijos.filter(f=>f.dia===dia && f.hora===hora).length;
