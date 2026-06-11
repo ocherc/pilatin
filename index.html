@@ -519,6 +519,8 @@ function formatDate(d) {
 function parseDate(s) { const [dd,mm,yyyy]=s.split('-'); return new Date(+yyyy,+mm-1,+dd); }
 function displayDate(d) { return DIAS_ABR[d.getDay()]+' '+d.getDate()+' '+MESES[d.getMonth()]; }
 function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function phoneMatch(a,b) { const pa=a||'',pb=b||''; return pa&&pb&&(pa===pb||pa.endsWith(pb)||pb.endsWith(pa)); }
 
 function getNext30Days() {
   const days=[], t=new Date();
@@ -637,8 +639,15 @@ async function doRegister() {
     options: { data: { nombre, apellido, phone } }
   });
   if(error) { loading(false); showAlert('reg-err', error.message); return; }
+  if(!data.session) {
+    loading(false);
+    const el=document.getElementById('reg-err');
+    el.className='alert alert-s';
+    el.textContent='✅ Cuenta creada. Revisá tu email para confirmar antes de iniciar sesión.';
+    el.style.display='block';
+    return;
+  }
   curUser = data.user;
-  if(phone) await sb.rpc('link_user_records', { user_phone: phone });
   await onLogin();
 }
 
@@ -815,8 +824,9 @@ async function confirmBooking(tipo) {
 // ════════════════════════════════════════════════
 function renderMisTurnos() {
   const hoy=formatDate(new Date());
-  const misFijos   = allFijos.filter(f=>f.user_id===curUser.id);
-  const misTurnos  = allTurnos.filter(t=>t.user_id===curUser.id).sort((a,b)=>a.fecha>b.fecha?1:-1);
+  const myPhone = curProfile?.phone||'';
+  const misFijos   = allFijos.filter(f=>f.user_id===curUser.id||(f.user_id==null&&phoneMatch(f.phone,myPhone)));
+  const misTurnos  = allTurnos.filter(t=>t.user_id===curUser.id||(t.user_id==null&&phoneMatch(t.phone,myPhone))).sort((a,b)=>a.fecha>b.fecha?1:-1);
 
   // ─ Fijos ─
   document.getElementById('lista-fijos').innerHTML = misFijos.length===0
@@ -1075,7 +1085,6 @@ function renderAdminAgenda() {
         ${(HORARIOS[dia]||[]).map(hora=>{
           const pts=allTurnos.filter(t=>t.fecha===fecha&&t.hora===hora);
           const fixC=allCancels.filter(c=>c.fecha===fecha&&c.hora===hora&&c.tipo==='fijo_puntual');
-          const phoneMatch=(a,b)=>{const pa=a||'',pb=b||''; return pa&&pb&&(pa===pb||pa.endsWith(pb)||pb.endsWith(pa));};
           const canceloFijo=(f)=>fixC.find(c=>c.user_id&&f.user_id?c.user_id===f.user_id:phoneMatch(c.phone,f.phone));
           const fixA=allFijos.filter(f=>f.dia===dia&&f.hora===hora).filter(f=>!canceloFijo(f));
           const occ=pts.length+fixA.length;
@@ -1085,7 +1094,7 @@ function renderAdminAgenda() {
             ${todos.length?todos.map(a=>`
               <div class="alumno-row">
                 <div class="dot"></div>
-                <span>${a.nombre} ${a.apellido}</span>
+                <span>${escHtml(a.nombre)} ${escHtml(a.apellido)}</span>
                 <span class="badge ${a._t==='Fijo'?'b-blue':'b-green'}" style="font-size:10px">${a._t}</span>
                 ${a._t==='Puntual'?`<button class="btn btn-ghost btn-sm" style="color:var(--danger);padding:2px 6px;font-size:11px" onclick="adminDelTurno('${a.id}')">✕</button>`:''}
               </div>`).join('')
@@ -1115,7 +1124,7 @@ function renderAdminAlumnos() {
         <div class="card-title">Usuarios registrados (${users.length})</div>
         <div class="tw"><table>
           <tr><th>Nombre</th><th>Email</th><th>Teléfono</th></tr>
-          ${users.length?users.map(u=>`<tr><td><strong>${u.nombre} ${u.apellido}</strong></td><td>${u.email||'—'}</td><td>${u.phone||'—'}</td></tr>`).join('')
+          ${users.length?users.map(u=>`<tr><td><strong>${escHtml(u.nombre)} ${escHtml(u.apellido)}</strong></td><td>${escHtml(u.email||'—')}</td><td>${escHtml(u.phone||'—')}</td></tr>`).join('')
           :'<tr><td colspan="3" style="color:var(--muted);text-align:center;padding:28px">Sin usuarios aún.</td></tr>'}
         </table></div>
       </div>`;
@@ -1131,8 +1140,8 @@ function renderAdminFijos() {
         <tr><th>Alumno</th><th>Día</th><th>Horario</th><th>Teléfono</th><th></th></tr>
         ${sorted.length?sorted.map(f=>`
           <tr>
-            <td><strong>${f.nombre} ${f.apellido}</strong></td>
-            <td>${f.dia}</td><td>${f.hora}hs</td><td>${f.phone||'—'}</td>
+            <td><strong>${escHtml(f.nombre)} ${escHtml(f.apellido)}</strong></td>
+            <td>${escHtml(f.dia)}</td><td>${escHtml(f.hora)}hs</td><td>${escHtml(f.phone||'—')}</td>
             <td><button class="btn btn-danger btn-sm" onclick="adminDelFijo('${f.id}')">Eliminar</button></td>
           </tr>`).join('')
         :'<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:28px">Sin alumnos fijos.</td></tr>'}
@@ -1155,8 +1164,8 @@ function renderAdminPuntuales() {
         <tr><th>Alumno</th><th>Fecha</th><th>Día</th><th>Horario</th><th>Teléfono</th><th></th></tr>
         ${sorted.length?sorted.map(t=>`
           <tr>
-            <td><strong>${t.nombre} ${t.apellido}</strong></td>
-            <td>${t.fecha.slice(0,5)}</td><td>${t.dia}</td><td>${t.hora}hs</td><td>${t.phone||'—'}</td>
+            <td><strong>${escHtml(t.nombre)} ${escHtml(t.apellido)}</strong></td>
+            <td>${escHtml(t.fecha.slice(0,5))}</td><td>${escHtml(t.dia)}</td><td>${escHtml(t.hora)}hs</td><td>${escHtml(t.phone||'—')}</td>
             <td><button class="btn btn-danger btn-sm" onclick="adminDelTurno('${t.id}')">Cancelar</button></td>
           </tr>`).join('')
         :'<tr><td colspan="6" style="color:var(--muted);text-align:center;padding:28px">Sin turnos.</td></tr>'}
@@ -1173,10 +1182,10 @@ function renderAdminCancelaciones() {
         <tr><th>Alumno</th><th>Fecha</th><th>Horario</th><th>Tipo</th><th>Multa</th></tr>
         ${sorted.length?sorted.map(c=>`
           <tr>
-            <td><strong>${c.nombre} ${c.apellido}</strong></td>
-            <td>${c.fecha.slice(0,5)} (${c.dia})</td>
-            <td>${c.hora}hs</td>
-            <td><span class="badge b-gray">${{fijo_puntual:'Fijo (día)',reprogramado:'Reprogramado',admin_cancel:'Por admin',puntual:'Puntual'}[c.tipo]||c.tipo}</span></td>
+            <td><strong>${escHtml(c.nombre)} ${escHtml(c.apellido)}</strong></td>
+            <td>${escHtml(c.fecha.slice(0,5))} (${escHtml(c.dia)})</td>
+            <td>${escHtml(c.hora)}hs</td>
+            <td><span class="badge b-gray">${{fijo_puntual:'Fijo (día)',reprogramado:'Reprogramado',admin_cancel:'Por admin',puntual:'Puntual'}[c.tipo]||escHtml(c.tipo)}</span></td>
             <td>${c.multa?'<span class="badge b-red">$10.000</span>':'<span class="badge b-gray">No</span>'}</td>
           </tr>`).join('')
         :'<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:28px">Sin cancelaciones.</td></tr>'}
@@ -1288,9 +1297,9 @@ function renderAdminCerrados() {
       ${cerrados.length
         ? `<div class="tw"><table><tr><th>Fecha</th><th>Día</th><th>Motivo</th><th></th></tr>
            ${cerrados.map(dc=>`<tr>
-             <td><strong>${dc.fecha.slice(0,5)}</strong></td>
+             <td><strong>${escHtml(dc.fecha.slice(0,5))}</strong></td>
              <td>${getNombreDia(parseDate(dc.fecha))}</td>
-             <td>${dc.motivo||'—'}</td>
+             <td>${escHtml(dc.motivo||'—')}</td>
              <td><button class="btn btn-danger btn-sm" onclick="adminDelCerrado('${dc.id}')">Eliminar</button></td>
            </tr>`).join('')}</table></div>`
         : '<div class="empty-state"><div class="icon">✅</div><p>No hay días cerrados personalizados.</p></div>'}
