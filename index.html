@@ -499,6 +499,7 @@ function labelCerrado(d) {
 // ════════════════════════════════════════════════
 let curUser = null, curProfile = null;
 let allTurnos = [], allFijos = [], allCancels = [], allDiasCerrados = [];
+let cancelCountMap = new Map();
 let selDate = null, selHora = null, curTipo = 'puntual';
 let selFijoDia = null, selFijoHora = null;
 let pendId = null, pendType = null;
@@ -566,12 +567,9 @@ function closeModal(id) { document.getElementById(id).classList.remove('show'); 
 function cuposOcupados(fecha, hora) {
   const dia  = getNombreDia(parseDate(fecha));
   const pts  = allTurnos.filter(t=>t.fecha===fecha && t.hora===hora).length;
-  const fixos = allFijos.filter(f=>f.dia===dia && f.hora===hora);
-  const fixC = allCancels.filter(c=>
-    c.fecha===fecha && c.hora===hora && c.tipo==='fijo_puntual' &&
-    fixos.some(f=> f.user_id && c.user_id ? f.user_id===c.user_id : phoneMatch(f.phone, c.phone))
-  ).length;
-  return pts + Math.max(0, fixos.length - fixC);
+  const fixA = allFijos.filter(f=>f.dia===dia && f.hora===hora).length;
+  const fixC = cancelCountMap.get(`${fecha}|${hora}`) || 0;
+  return pts + Math.max(0, fixA - fixC);
 }
 function cuposOcupadosFijo(dia, hora) {
   return allFijos.filter(f=>f.dia===dia && f.hora===hora).length;
@@ -590,16 +588,20 @@ function hayMulta(fecha, hora) {
 // SUPABASE DATA LAYER
 // ════════════════════════════════════════════════
 async function fetchAll() {
-  const [t, f, c, dc] = await Promise.all([
+  const isAdmin = curProfile?.role === 'admin';
+  const [t, f, dc, counts, cancels] = await Promise.all([
     sb.from('turnos').select('*'),
     sb.from('fijos').select('*'),
-    sb.from('cancelaciones').select('*'),
     sb.from('dias_cerrados').select('*'),
+    sb.rpc('get_fijo_cancel_counts'),
+    isAdmin ? sb.from('cancelaciones').select('*') : Promise.resolve({ data: [] }),
   ]);
-  allTurnos       = t.data  || [];
-  allFijos        = f.data  || [];
-  allCancels      = c.data  || [];
-  allDiasCerrados = dc.data || [];
+  allTurnos       = t.data     || [];
+  allFijos        = f.data     || [];
+  allDiasCerrados = dc.data    || [];
+  allCancels      = cancels.data || [];
+  // Mapa de conteos: "fecha|hora" → cantidad de fijo_puntual cancels
+  cancelCountMap  = new Map((counts.data || []).map(r => [`${r.fecha}|${r.hora}`, Number(r.cnt)]));
 }
 async function fetchProfile(uid) {
   const { data } = await sb.from('profiles').select('*').eq('id', uid).single();
