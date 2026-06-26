@@ -319,14 +319,17 @@ tr:hover td{background:#fafafa}
   <div class="modal">
     <h3>Reprogramar turno</h3>
     <div class="msub">Elegí el nuevo día y horario para tu clase.</div>
-    <div class="fg"><label>Nuevo día</label>
-      <select id="rs-dia" onchange="loadRsHoras()"></select></div>
-    <div class="fg"><label>Horario</label>
-      <select id="rs-hora"></select></div>
+    <div id="rs-form">
+      <div class="fg"><label>Nuevo día</label>
+        <select id="rs-dia" onchange="loadRsHoras()"></select></div>
+      <div class="fg"><label>Horario</label>
+        <select id="rs-hora"></select></div>
+    </div>
+    <div id="rs-no-dispo" class="hidden" style="color:var(--muted);text-align:center;padding:20px 0">No hay horarios disponibles para reprogramar.</div>
     <div class="alert alert-e" id="rs-err"></div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal('modal-reschedule')">Cancelar</button>
-      <button class="btn btn-accent"  onclick="confirmReschedule()">Reprogramar</button>
+      <button class="btn btn-accent" id="rs-btn-confirm" onclick="confirmReschedule()">Reprogramar</button>
     </div>
   </div>
 </div>
@@ -345,10 +348,11 @@ tr:hover td{background:#fafafa}
     </div>
     <div class="alert alert-w" style="display:block;margin-bottom:4px">💡 Para evitar multa avisá con al menos 3 horas de anticipación.</div>
 
-    <label class="check-row mt-14">
+    <label class="check-row mt-14" id="faltar-recuperar-row">
       <input type="checkbox" id="faltar-recuperar" onchange="toggleFaltarRecuperar()">
       Quiero recuperar la clase en otro horario esta semana
     </label>
+    <div id="faltar-no-dispo" class="hidden" style="color:var(--muted);margin-top:14px">No hay horarios disponibles para recuperar esta clase.</div>
 
     <div id="faltar-reprog-section" class="hidden" style="margin-top:14px">
       <div class="fg"><label>Día alternativo</label>
@@ -902,17 +906,23 @@ function openFaltar(fijoId) {
   });
 
   // Cargar días alternativos para recupero (solo con cupos)
-  const sdR=document.getElementById('faltar-reprog-dia'); sdR.innerHTML='';
-  getNext30Days().filter(d=>{
+  const diasDisp=getNext30Days().filter(d=>{
     const f2=formatDate(d), dia2=getNombreDia(d);
     return (HORARIOS[dia2]||[]).some(h=>cuposLibres(f2,h)>0);
-  }).forEach(d=>{
-    const opt=document.createElement('option');
-    opt.value=formatDate(d);
-    opt.textContent=displayDate(d)+' — '+getNombreDia(d);
-    sdR.appendChild(opt);
   });
-  loadFaltarReprogHoras();
+  const hayDias=diasDisp.length>0;
+  document.getElementById('faltar-recuperar-row').classList.toggle('hidden',!hayDias);
+  document.getElementById('faltar-no-dispo').classList.toggle('hidden',hayDias);
+  if(hayDias){
+    const sdR=document.getElementById('faltar-reprog-dia'); sdR.innerHTML='';
+    diasDisp.forEach(d=>{
+      const opt=document.createElement('option');
+      opt.value=formatDate(d);
+      opt.textContent=displayDate(d)+' — '+getNombreDia(d);
+      sdR.appendChild(opt);
+    });
+    loadFaltarReprogHoras();
+  }
   onFaltarFechaChange();
   document.getElementById('modal-faltar').classList.add('show');
 }
@@ -1028,15 +1038,22 @@ async function doCancelTurno(multa) {
 function openReschedule(id) {
   pendRsId=id; hideAlert('rs-err');
   const sel=document.getElementById('rs-dia'); sel.innerHTML='';
-  getNext30Days().filter(d=>{
+  const diasDisp=getNext30Days().filter(d=>{
     const f=formatDate(d), dia=getNombreDia(d);
     return (HORARIOS[dia]||[]).some(h=>cuposLibres(f,h)>0);
-  }).forEach(d=>{
-    const opt=document.createElement('option');
-    opt.value=formatDate(d); opt.textContent=displayDate(d)+' — '+getNombreDia(d);
-    sel.appendChild(opt);
   });
-  loadRsHoras();
+  const hayDias=diasDisp.length>0;
+  document.getElementById('rs-form').classList.toggle('hidden',!hayDias);
+  document.getElementById('rs-no-dispo').classList.toggle('hidden',hayDias);
+  document.getElementById('rs-btn-confirm').classList.toggle('hidden',!hayDias);
+  if(hayDias){
+    diasDisp.forEach(d=>{
+      const opt=document.createElement('option');
+      opt.value=formatDate(d); opt.textContent=displayDate(d)+' — '+getNombreDia(d);
+      sel.appendChild(opt);
+    });
+    loadRsHoras();
+  }
   document.getElementById('modal-reschedule').classList.add('show');
 }
 function loadRsHoras() {
