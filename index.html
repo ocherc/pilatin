@@ -1545,3 +1545,18 @@ async function importarTurnos() {
     } else {
       loading(false);
       showPage('page-login');
+    }
+  } catch(e) {
+    loading(false);
+    showPage('page-login');
+    console.error('Init error:', e);
+  }
+
+  // Auth state changes
+  sb.auth.onAuthStateChange(async(event, session)=>{
+    if(event==='SIGNED_OUT'){ showPage('page-login'); }
+  });
+})();
+</script>
+</body>
+</html>
