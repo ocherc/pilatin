@@ -163,6 +163,8 @@ tr:hover td{background:#fafafa}
     <div class="fg"><label>E-mail</label><input type="email" id="login-email" placeholder="tu@email.com" onkeydown="if(event.key==='Enter')doLogin()"></div>
     <div class="fg"><label>Contraseña</label><input type="password" id="login-pass" placeholder="Tu contraseña" onkeydown="if(event.key==='Enter')doLogin()"></div>
     <button class="btn btn-primary btn-w" onclick="doLogin()">Iniciar sesión</button>
+    <div class="alert alert-s" id="login-ok"></div>
+    <div class="form-footer"><a onclick="doForgotPassword()">¿Olvidaste tu contraseña?</a></div>
     <div class="form-footer">¿No tenés cuenta? <a onclick="showPage('page-register')">Registrate gratis</a></div>
   </div>
 </div>
@@ -618,7 +620,7 @@ function showPage(id) {
 }
 
 async function doLogin() {
-  hideAlert('login-err');
+  hideAlert('login-err'); hideAlert('login-ok');
   const email = (document.getElementById('login-email').value||'').trim().toLowerCase();
   const pass  = document.getElementById('login-pass').value||'';
   if(!email||!pass) { showAlert('login-err','Completá email y contraseña.'); return; }
@@ -629,7 +631,20 @@ async function doLogin() {
   await onLogin();
 }
 
+async function doForgotPassword() {
+  hideAlert('login-err'); hideAlert('login-ok');
+  const email = (document.getElementById('login-email').value||'').trim().toLowerCase();
+  if(!email) { showAlert('login-err','Escribí tu email primero.'); return; }
+  loading(true);
+  const { error } = await sb.auth.resetPasswordForEmail(email);
+  loading(false);
+  if(error) { showAlert('login-err', error.message); return; }
+  showAlert('login-ok','📩 Te enviamos un email para restablecer tu contraseña.');
+}
+
 async function doRegister() {
+  const el=document.getElementById('reg-err');
+  el.className='alert alert-e'; el.style.display='none';
   hideAlert('reg-err');
   const email    = (document.getElementById('reg-email').value||'').trim().toLowerCase();
   const pass     = document.getElementById('reg-pass').value||'';
@@ -1530,18 +1545,3 @@ async function importarTurnos() {
     } else {
       loading(false);
       showPage('page-login');
-    }
-  } catch(e) {
-    loading(false);
-    showPage('page-login');
-    console.error('Init error:', e);
-  }
-
-  // Auth state changes
-  sb.auth.onAuthStateChange(async(event, session)=>{
-    if(event==='SIGNED_OUT'){ showPage('page-login'); }
-  });
-})();
-</script>
-</body>
-</html>
