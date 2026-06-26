@@ -276,6 +276,7 @@ tr:hover td{background:#fafafa}
         <button class="btn btn-outline btn-sm" id="abtn-cancelaciones" onclick="showAdminSec('cancelaciones')">❌ Cancelaciones</button>
         <button class="btn btn-outline btn-sm" id="abtn-libres"        onclick="showAdminSec('libres')">🟢 Turnos libres</button>
         <button class="btn btn-outline btn-sm" id="abtn-cerrados"     onclick="showAdminSec('cerrados')">🔒 Días cerrados</button>
+        <button class="btn btn-outline btn-sm" id="abtn-horarios"    onclick="showAdminSec('horarios')">🕐 Horarios</button>
         <button class="btn btn-outline btn-sm" style="border-color:#a855f7;color:#a855f7" onclick="document.getElementById('modal-import-fijos').classList.add('show')">⬆ Importar fijos</button>
         <button class="btn btn-outline btn-sm" style="border-color:#a855f7;color:#a855f7" onclick="document.getElementById('modal-import-turnos').classList.add('show')">⬆ Importar turnos</button>
         <button class="btn btn-outline btn-sm" style="border-color:#a855f7;color:#a855f7" onclick="document.getElementById('modal-import-cancels').classList.add('show')">⬆ Importar cancelaciones</button>
@@ -287,6 +288,7 @@ tr:hover td{background:#fafafa}
       <div id="admin-cancelaciones" class="hidden"></div>
       <div id="admin-libres"        class="hidden"></div>
       <div id="admin-cerrados"      class="hidden"></div>
+      <div id="admin-horarios"     class="hidden"></div>
     </div>
 
   </div>
@@ -466,13 +468,14 @@ const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 // ════════════════════════════════════════════════
 // CONFIG NEGOCIO
 // ════════════════════════════════════════════════
-const HORARIOS = {
+const HORARIOS_DEFAULT = {
   'Lunes':     ['7:00','8:00','9:00','16:00','17:00','18:00'],
   'Martes':    ['8:00','9:00','16:00','17:00','18:00','19:00'],
   'Miércoles': ['7:00','8:00','9:00','16:00','17:00','18:00'],
   'Jueves':    ['8:00','9:00','16:00','17:00','18:00','19:00'],
   'Viernes':   ['7:00','8:00','9:00','16:00','17:00','18:00'],
 };
+let HORARIOS = {};
 const DIAS_SEMANA = ['Lunes','Martes','Miércoles','Jueves','Viernes'];
 const DIA_JS = { 'Lunes':1,'Martes':2,'Miércoles':3,'Jueves':4,'Viernes':5 };
 const MAX_CUPOS = 6;
@@ -599,19 +602,28 @@ function hayMulta(fecha, hora) {
 // SUPABASE DATA LAYER
 // ════════════════════════════════════════════════
 async function fetchAll() {
-  const [t, f, dc, counts, cancels] = await Promise.all([
+  const [t, f, dc, counts, cancels, hor] = await Promise.all([
     sb.from('turnos').select('*'),
     sb.from('fijos').select('*'),
     sb.from('dias_cerrados').select('*'),
     sb.rpc('get_fijo_cancel_counts'),
     sb.from('cancelaciones').select('*'),
+    sb.from('horarios').select('*'),
   ]);
   allTurnos       = t.data     || [];
   allFijos        = f.data     || [];
   allDiasCerrados = dc.data    || [];
   allCancels      = cancels.data || [];
-  // Mapa de conteos: "fecha|hora" → cantidad de fijo_puntual cancels
   cancelCountMap  = new Map((counts.data || []).map(r => [`${r.fecha}|${r.hora}`, Number(r.cnt)]));
+  // Horarios dinámicos: si la tabla tiene datos los usa, sino fallback al default
+  const rows = hor.data || [];
+  if(rows.length > 0) {
+    HORARIOS = {};
+    rows.forEach(r => { if(!HORARIOS[r.dia]) HORARIOS[r.dia]=[]; HORARIOS[r.dia].push(r.hora); });
+    DIAS_SEMANA.forEach(d => { if(HORARIOS[d]) HORARIOS[d].sort(); });
+  } else {
+    HORARIOS = JSON.parse(JSON.stringify(HORARIOS_DEFAULT));
+  }
 }
 async function fetchProfile(uid) {
   const { data } = await sb.from('profiles').select('*').eq('id', uid).single();
@@ -1123,12 +1135,12 @@ function renderAdmin() {
 }
 
 function showAdminSec(sec) {
-  ['agenda','alumnos','fijos','puntuales','cancelaciones','libres','cerrados'].forEach(s=>{
+  ['agenda','alumnos','fijos','puntuales','cancelaciones','libres','cerrados','horarios'].forEach(s=>{
     document.getElementById('admin-'+s).classList.toggle('hidden',s!==sec);
     const btn=document.getElementById('abtn-'+s);
     if(btn){ btn.classList.toggle('btn-primary',s===sec); btn.classList.toggle('btn-outline',s!==sec); }
   });
-  ({agenda:renderAdminAgenda,alumnos:renderAdminAlumnos,fijos:renderAdminFijos,puntuales:renderAdminPuntuales,cancelaciones:renderAdminCancelaciones,libres:renderAdminLibres,cerrados:renderAdminCerrados})[sec]?.();
+  ({agenda:renderAdminAgenda,alumnos:renderAdminAlumnos,fijos:renderAdminFijos,puntuales:renderAdminPuntuales,cancelaciones:renderAdminCancelaciones,libres:renderAdminLibres,cerrados:renderAdminCerrados,horarios:renderAdminHorarios})[sec]?.();
 }
 
 function renderAdminAgenda() {
@@ -1413,6 +1425,72 @@ async function adminCerrarFeriado(id) {
   loading(true);
   await sb.from('dias_cerrados').delete().eq('id',id);
   await fetchAll(); loading(false); renderAdminCerrados();
+}
+
+// ── ADMIN: HORARIOS ──
+function renderAdminHorarios() {
+  const allHoras = new Set();
+  DIAS_SEMANA.forEach(d => (HORARIOS[d]||[]).forEach(h => allHoras.add(h)));
+  const horas = [...allHoras].sort();
+  const isFromDB = Object.values(HORARIOS).some(a=>a.length>0);
+
+  document.getElementById('admin-horarios').innerHTML = `
+    <div class="card">
+      <div class="card-title">Grilla de horarios${isFromDB?'':' (default)'}</div>
+      ${isFromDB?'':`<div style="margin-bottom:14px"><button class="btn btn-primary btn-sm" onclick="seedHorarios()">Guardar horarios actuales en la base de datos</button><div class="msub" style="margin-top:6px">Hacé click para poder editar los horarios. Esto carga los horarios actuales en Supabase.</div></div>`}
+      <div class="tw"><table>
+        <tr><th>Hora</th>${DIAS_SEMANA.map(d=>`<th>${d.slice(0,3)}</th>`).join('')}</tr>
+        ${horas.map(h=>`<tr>
+          <td><strong>${h}hs</strong></td>
+          ${DIAS_SEMANA.map(d=>{
+            const activo = (HORARIOS[d]||[]).includes(h);
+            return `<td style="text-align:center">
+              <button class="btn btn-sm ${activo?'btn-primary':'btn-outline'}" style="width:36px;height:36px;padding:0"
+                onclick="toggleHorario('${d}','${h}')">${activo?'✓':'—'}</button>
+            </td>`;
+          }).join('')}
+        </tr>`).join('')}
+      </table></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Agregar horario nuevo</div>
+      <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap">
+        <div class="fg" style="margin:0"><label>Hora</label>
+          <input type="text" id="hor-nueva-hora" placeholder="Ej: 10:00" style="width:100px;${inputStyle}"></div>
+        <button class="btn btn-primary btn-sm" style="height:42px" onclick="adminAddHora()">+ Agregar a todos los días</button>
+      </div>
+      <div class="alert alert-e" id="hor-err" style="margin-top:10px"></div>
+    </div>`;
+}
+
+async function seedHorarios() {
+  loading(true);
+  const inserts = [];
+  DIAS_SEMANA.forEach(d => (HORARIOS_DEFAULT[d]||[]).forEach(h => inserts.push({dia:d,hora:h})));
+  await sb.from('horarios').upsert(inserts, {onConflict:'dia,hora'});
+  await fetchAll(); loading(false); renderAdminHorarios();
+}
+
+async function toggleHorario(dia, hora) {
+  loading(true);
+  const activo = (HORARIOS[dia]||[]).includes(hora);
+  if(activo) {
+    await sb.from('horarios').delete().eq('dia',dia).eq('hora',hora);
+  } else {
+    await sb.from('horarios').insert({dia, hora});
+  }
+  await fetchAll(); loading(false); renderAdminHorarios();
+}
+
+async function adminAddHora() {
+  hideAlert('hor-err');
+  const hora = (document.getElementById('hor-nueva-hora').value||'').trim();
+  if(!/^\d{1,2}:00$/.test(hora)) { showAlert('hor-err','Formato inválido. Usá H:00 o HH:00 (ej: 10:00, 7:00)'); return; }
+  loading(true);
+  const inserts = DIAS_SEMANA.map(dia => ({dia, hora}));
+  const {error} = await sb.from('horarios').upsert(inserts, {onConflict:'dia,hora'});
+  if(error) { loading(false); showAlert('hor-err', error.message); return; }
+  await fetchAll(); loading(false); renderAdminHorarios();
 }
 
 // ── ADMIN: add manual slot ──
