@@ -528,6 +528,7 @@ function formatDate(d) {
   return String(d.getDate()).padStart(2,'0')+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+d.getFullYear();
 }
 function parseDate(s) { const [dd,mm,yyyy]=s.split('-'); return new Date(+yyyy,+mm-1,+dd); }
+function fechaKey(s) { const [dd,mm,yyyy]=s.split('-'); return yyyy+mm+dd; }
 function displayDate(d) { return DIAS_ABR[d.getDay()]+' '+d.getDate()+' '+MESES[d.getMonth()]; }
 function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -854,7 +855,7 @@ function renderMisTurnos() {
   const hoy=formatDate(new Date());
   const myPhone = curProfile?.phone||'';
   const misFijos   = allFijos.filter(f=>f.user_id===curUser.id||(f.user_id==null&&phoneMatch(f.phone,myPhone)));
-  const misTurnos  = allTurnos.filter(t=>t.user_id===curUser.id||(t.user_id==null&&phoneMatch(t.phone,myPhone))).sort((a,b)=>a.fecha>b.fecha?1:-1);
+  const misTurnos  = allTurnos.filter(t=>t.user_id===curUser.id||(t.user_id==null&&phoneMatch(t.phone,myPhone))).sort((a,b)=>fechaKey(a.fecha)>fechaKey(b.fecha)?1:-1);
 
   // ─ Fijos ─
   document.getElementById('lista-fijos').innerHTML = misFijos.length===0
@@ -873,9 +874,9 @@ function renderMisTurnos() {
 
   // ─ Ausencias registradas ─
   const misAusencias = allCancels.filter(c=>
-    c.fecha>=hoy && c.tipo==='fijo_puntual' &&
+    fechaKey(c.fecha)>=fechaKey(hoy) && c.tipo==='fijo_puntual' &&
     (c.user_id===curUser.id||(c.user_id==null&&phoneMatch(c.phone,myPhone)))
-  ).sort((a,b)=>a.fecha>b.fecha?1:-1);
+  ).sort((a,b)=>fechaKey(a.fecha)>fechaKey(b.fecha)?1:-1);
   document.getElementById('card-ausencias').style.display = misAusencias.length?'block':'none';
   document.getElementById('lista-ausencias').innerHTML = misAusencias.length===0 ? ''
     : misAusencias.map(c=>`
@@ -890,7 +891,7 @@ function renderMisTurnos() {
   document.getElementById('lista-puntuales').innerHTML = misTurnos.length===0
     ? '<div class="empty-state"><div class="icon">🗓</div><p>No tenés turnos puntuales.</p></div>'
     : misTurnos.map(t=>{
-      const past=t.fecha<hoy;
+      const past=fechaKey(t.fecha)<fechaKey(hoy);
       return `
       <div class="turno-item">
         <div class="ti-info">
@@ -1218,7 +1219,7 @@ async function adminDelFijo(id) {
 }
 
 function renderAdminPuntuales() {
-  const sorted=[...allTurnos].sort((a,b)=>a.fecha>b.fecha?1:-1);
+  const sorted=[...allTurnos].sort((a,b)=>fechaKey(a.fecha)>fechaKey(b.fecha)?1:-1);
   document.getElementById('admin-puntuales').innerHTML=`
     <div class="card">
       <div class="card-title">Turnos puntuales (${sorted.length})</div>
@@ -1318,11 +1319,11 @@ function renderAdminLibres() {
 // ── ADMIN: días cerrados ──
 const inputStyle = 'width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-size:14px;outline:none';
 function renderAdminCerrados() {
-  const cerrados  = allDiasCerrados.filter(c=>c.tipo!=='apertura').sort((a,b)=>a.fecha>b.fecha?1:-1);
+  const cerrados  = allDiasCerrados.filter(c=>c.tipo!=='apertura').sort((a,b)=>fechaKey(a.fecha)>fechaKey(b.fecha)?1:-1);
   const aperturas = allDiasCerrados.filter(c=>c.tipo==='apertura');
   const hoy = formatDate(new Date());
   const feriadosRows = Object.entries(FERIADOS)
-    .filter(([f])=>f>=hoy).sort(([a],[b])=>a>b?1:-1)
+    .filter(([f])=>fechaKey(f)>=fechaKey(hoy)).sort(([a],[b])=>fechaKey(a)>fechaKey(b)?1:-1)
     .map(([fecha,nombre])=>{
       const ap = aperturas.find(a=>a.fecha===fecha);
       return ap
