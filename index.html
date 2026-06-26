@@ -620,7 +620,7 @@ async function fetchAll() {
   if(rows.length > 0) {
     HORARIOS = {};
     rows.forEach(r => { if(!HORARIOS[r.dia]) HORARIOS[r.dia]=[]; HORARIOS[r.dia].push(r.hora); });
-    DIAS_SEMANA.forEach(d => { if(HORARIOS[d]) HORARIOS[d].sort(); });
+    DIAS_SEMANA.forEach(d => { if(HORARIOS[d]) HORARIOS[d].sort((a,b)=>parseInt(a)-parseInt(b)); });
   } else {
     HORARIOS = JSON.parse(JSON.stringify(HORARIOS_DEFAULT));
   }
@@ -1431,7 +1431,7 @@ async function adminCerrarFeriado(id) {
 function renderAdminHorarios() {
   const allHoras = new Set();
   DIAS_SEMANA.forEach(d => (HORARIOS[d]||[]).forEach(h => allHoras.add(h)));
-  const horas = [...allHoras].sort();
+  const horas = [...allHoras].sort((a,b)=>parseInt(a)-parseInt(b));
   const isFromDB = Object.values(HORARIOS).some(a=>a.length>0);
 
   document.getElementById('admin-horarios').innerHTML = `
@@ -1457,7 +1457,14 @@ function renderAdminHorarios() {
       <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap">
         <div class="fg" style="margin:0"><label>Hora</label>
           <input type="text" id="hor-nueva-hora" placeholder="Ej: 10:00" style="width:100px;${inputStyle}"></div>
-        <button class="btn btn-primary btn-sm" style="height:42px" onclick="adminAddHora()">+ Agregar a todos los días</button>
+        <button class="btn btn-primary btn-sm" style="height:42px" onclick="adminAddHora()">+ Agregar</button>
+      </div>
+      <div id="hor-dias-pick" class="hidden" style="margin-top:10px">
+        <label style="font-size:13px;font-weight:600;margin-bottom:6px;display:block">¿Qué días?</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          ${DIAS_SEMANA.map(d=>`<label class="check-row" style="margin:0"><input type="checkbox" class="hor-dia-chk" value="${d}" checked> ${d}</label>`).join('')}
+        </div>
+        <button class="btn btn-accent btn-sm" style="margin-top:10px" onclick="confirmAddHora()">Confirmar</button>
       </div>
       <div class="alert alert-e" id="hor-err" style="margin-top:10px"></div>
     </div>`;
@@ -1482,12 +1489,19 @@ async function toggleHorario(dia, hora) {
   await fetchAll(); loading(false); renderAdminHorarios();
 }
 
-async function adminAddHora() {
+function adminAddHora() {
   hideAlert('hor-err');
   const hora = (document.getElementById('hor-nueva-hora').value||'').trim();
   if(!/^\d{1,2}:00$/.test(hora)) { showAlert('hor-err','Formato inválido. Usá H:00 o HH:00 (ej: 10:00, 7:00)'); return; }
+  document.getElementById('hor-dias-pick').classList.remove('hidden');
+}
+
+async function confirmAddHora() {
+  const hora = (document.getElementById('hor-nueva-hora').value||'').trim();
+  const dias = [...document.querySelectorAll('.hor-dia-chk:checked')].map(c=>c.value);
+  if(!dias.length) { showAlert('hor-err','Seleccioná al menos un día.'); return; }
   loading(true);
-  const inserts = DIAS_SEMANA.map(dia => ({dia, hora}));
+  const inserts = dias.map(dia => ({dia, hora}));
   const {error} = await sb.from('horarios').upsert(inserts, {onConflict:'dia,hora'});
   if(error) { loading(false); showAlert('hor-err', error.message); return; }
   await fetchAll(); loading(false); renderAdminHorarios();
