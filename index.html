@@ -901,9 +901,12 @@ function openFaltar(fijoId) {
     sel.appendChild(opt);
   });
 
-  // Cargar días alternativos para recupero
+  // Cargar días alternativos para recupero (solo con cupos)
   const sdR=document.getElementById('faltar-reprog-dia'); sdR.innerHTML='';
-  getNext30Days().forEach(d=>{
+  getNext30Days().filter(d=>{
+    const f2=formatDate(d), dia2=getNombreDia(d);
+    return (HORARIOS[dia2]||[]).some(h=>cuposLibres(f2,h)>0);
+  }).forEach(d=>{
     const opt=document.createElement('option');
     opt.value=formatDate(d);
     opt.textContent=displayDate(d)+' — '+getNombreDia(d);
@@ -928,11 +931,11 @@ function loadFaltarReprogHoras() {
   const fecha=document.getElementById('faltar-reprog-dia').value; if(!fecha) return;
   const dia=getNombreDia(parseDate(fecha));
   const sel=document.getElementById('faltar-reprog-hora'); sel.innerHTML='';
-  (HORARIOS[dia]||[]).forEach(h=>{
+  (HORARIOS[dia]||[]).filter(h=>cuposLibres(fecha,h)>0).forEach(h=>{
     const lib=cuposLibres(fecha,h);
     const opt=document.createElement('option');
-    opt.value=h; opt.disabled=lib<=0;
-    opt.textContent=h+'hs'+(lib>0?` (${lib} cupo${lib!==1?'s':''})`:'  — Sin cupos');
+    opt.value=h;
+    opt.textContent=h+'hs — '+lib+' cupo'+(lib!==1?'s':'');
     sel.appendChild(opt);
   });
 }
