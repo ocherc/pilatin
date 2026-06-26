@@ -254,6 +254,10 @@ tr:hover td{background:#fafafa}
         <div class="card-title">Turnos fijos (semanales)</div>
         <div id="lista-fijos"></div>
       </div>
+      <div class="card" id="card-ausencias" style="display:none">
+        <div class="card-title">Ausencias registradas</div>
+        <div id="lista-ausencias"></div>
+      </div>
       <div class="card">
         <div class="card-title">Turnos puntuales</div>
         <div id="lista-puntuales"></div>
@@ -594,13 +598,12 @@ function hayMulta(fecha, hora) {
 // SUPABASE DATA LAYER
 // ════════════════════════════════════════════════
 async function fetchAll() {
-  const isAdmin = curProfile?.role === 'admin';
   const [t, f, dc, counts, cancels] = await Promise.all([
     sb.from('turnos').select('*'),
     sb.from('fijos').select('*'),
     sb.from('dias_cerrados').select('*'),
     sb.rpc('get_fijo_cancel_counts'),
-    isAdmin ? sb.from('cancelaciones').select('*') : Promise.resolve({ data: [] }),
+    sb.from('cancelaciones').select('*'),
   ]);
   allTurnos       = t.data     || [];
   allFijos        = f.data     || [];
@@ -718,6 +721,7 @@ function switchTab(tabId) {
   document.querySelectorAll('.nav-tab').forEach(t =>
     t.classList.toggle('active', t.getAttribute('data-tab')===tabId)
   );
+  if(tabId==='tab-reservar') { renderDayPicker(); renderFijoDias(); }
   if(tabId==='tab-mis-turnos') renderMisTurnos();
   if(tabId==='tab-admin') renderAdmin();
 }
@@ -864,6 +868,21 @@ function renderMisTurnos() {
         <div class="ti-actions">
           <button class="btn btn-warn btn-sm" onclick="openFaltar('${f.id}')">Faltar un día</button>
           <button class="btn btn-danger btn-sm" onclick="openCancelFijo('${f.id}')">Cancelar fijo</button>
+        </div>
+      </div>`).join('');
+
+  // ─ Ausencias registradas ─
+  const misAusencias = allCancels.filter(c=>
+    c.fecha>=hoy && c.tipo==='fijo_puntual' &&
+    (c.user_id===curUser.id||(c.user_id==null&&phoneMatch(c.phone,myPhone)))
+  ).sort((a,b)=>a.fecha>b.fecha?1:-1);
+  document.getElementById('card-ausencias').style.display = misAusencias.length?'block':'none';
+  document.getElementById('lista-ausencias').innerHTML = misAusencias.length===0 ? ''
+    : misAusencias.map(c=>`
+      <div class="turno-item">
+        <div class="ti-info">
+          <div class="fecha">${c.dia} ${c.fecha.slice(0,5)} · ${c.hora}hs</div>
+          <div class="tipo"><span class="badge b-orange">Ausencia</span>${c.multa?'<span class="badge b-red" style="margin-left:6px">Multa</span>':''}</div>
         </div>
       </div>`).join('');
 
