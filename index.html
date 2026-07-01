@@ -1696,3 +1696,73 @@ async function importarCancelaciones() {
       return (fp===phone||fp.endsWith(phone)||phone.endsWith(fp)) && f.hora===hora && f.dia===diaVal;
     });
     return {
+      user_id:  null,
+      nombre:   r['Nombre']||r['nombre']||'',
+      apellido: r['Apellido']||r['apellido']||'',
+      phone,
+      fecha:    fechaVal,
+      dia:      diaVal,
+      hora,
+      tipo:     esFijo ? 'fijo_puntual' : 'puntual',
+      multa:    false,
+    };
+  }).filter(r=>r.nombre&&r.fecha&&r.hora);
+  const { error } = await sb.from('cancelaciones').insert(records);
+  loading(false);
+  if(error){ showAlert('import-cancels-err','Error: '+error.message); return; }
+  const ok=document.getElementById('import-cancels-ok');
+  ok.textContent=`✅ ${records.length} cancelaciones importadas.`; ok.style.display='block';
+  await fetchAll();
+}
+async function importarTurnos() {
+  hideAlert('import-turnos-err'); hideAlert('import-turnos-ok');
+  const csv = document.getElementById('import-turnos-csv').value;
+  if(!csv.trim()) { showAlert('import-turnos-err','Pegá el contenido CSV primero.'); return; }
+  const { rows } = parseCSV(csv);
+  if(!rows.length) { showAlert('import-turnos-err','No se encontraron datos válidos.'); return; }
+  loading(true);
+  const records = rows.map(r=>({
+    user_id:null,
+    nombre:   r['Nombre']||r['nombre']||'',
+    apellido: r['Apellido']||r['apellido']||'',
+    phone:    cleanPhone(r['Celular']||r['celular']||''),
+    fecha:    r['Fecha']||r['fecha']||'',
+    dia:      normalizeDia(r['Dia']||r['dia']||''),
+    hora:     r['HoraInicio']||r['Hora']||r['hora']||'',
+  })).filter(r=>r.nombre&&r.fecha&&r.hora);
+  const { error } = await sb.from('turnos').insert(records);
+  loading(false);
+  if(error){ showAlert('import-turnos-err','Error: '+error.message); return; }
+  const ok=document.getElementById('import-turnos-ok');
+  ok.textContent=`✅ ${records.length} turnos importados.`; ok.style.display='block';
+  await fetchAll();
+}
+
+// ════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════
+(async function init() {
+  loading(true);
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if(session?.user) {
+      curUser=session.user;
+      await onLogin();
+    } else {
+      loading(false);
+      showPage('page-login');
+    }
+  } catch(e) {
+    loading(false);
+    showPage('page-login');
+    console.error('Init error:', e);
+  }
+
+  // Auth state changes
+  sb.auth.onAuthStateChange(async(event, session)=>{
+    if(event==='SIGNED_OUT'){ showPage('page-login'); }
+  });
+})();
+</script>
+</body>
+</html>
