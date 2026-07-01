@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Política de Privacidad · Pilatin</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1a1a1a;background:#fafafa;padding:40px 20px}
+  .wrap{max-width:680px;margin:0 auto;background:#fff;border-radius:12px;padding:48px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+  h1{font-size:1.6rem;margin-bottom:6px}
+  .sub{color:#888;font-size:13px;margin-bottom:36px}
+  h2{font-size:1rem;font-weight:700;margin:28px 0 8px}
+  p,li{font-size:.95rem;line-height:1.7;color:#333}
+  ul{padding-left:18px;margin-top:6px}
+  li{margin-bottom:4px}
+  a{color:#2a7a6a;text-decoration:none}
+  a:hover{text-decoration:underline}
+  .back{display:inline-block;margin-top:36px;font-size:13px;color:#888}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Política de Privacidad</h1>
+  <p class="sub">Última actualización: julio 2026</p>
+
+  <p>Esta política describe cómo <strong>Pilatin</strong> recopila, usa y protege la información personal de quienes utilizan la plataforma de reservas online del estudio.</p>
+
+  <h2>1. Datos que recopilamos</h2>
+  <ul>
+    <li>Nombre y apellido</li>
+    <li>Dirección de correo electrónico</li>
+    <li>Número de teléfono celular</li>
+    <li>Historial de turnos reservados y cancelaciones</li>
+  </ul>
+
+  <h2>2. Cómo usamos tus datos</h2>
+  <p>Los datos se utilizan exclusivamente para:</p>
+  <ul>
+    <li>Gestionar la reserva y cancelación de clases de Pilates</li>
+    <li>Identificarte como alumno dentro del sistema</li>
+    <li>Permitir al estudio organizar su agenda</li>
+  </ul>
+  <p>No compartimos tus datos con terceros ni los utilizamos con fines publicitarios.</p>
+
+  <h2>3. Almacenamiento y seguridad</h2>
+  <p>La información se almacena en <strong>Supabase</strong>, una plataforma con cifrado en tránsito y en reposo. El acceso a tus datos está restringido a tu propia cuenta y al administrador del estudio.</p>
+
+  <h2>4. Inicio de sesión con Google</h2>
+  <p>Si elegís iniciar sesión con tu cuenta de Google, recibimos únicamente tu nombre y dirección de email. No accedemos a ningún otro dato de tu cuenta de Google.</p>
+
+  <h2>5. Tus derechos</h2>
+  <p>Podés solicitar en cualquier momento la eliminación de tu cuenta y todos tus datos escribiendo a <a href="mailto:belu@pilatin.com">belu@pilatin.com</a>.</p>
+
+  <h2>6. Contacto</h2>
+  <p>Ante cualquier consulta sobre tu privacidad:<br>
+  📧 <a href="mailto:belu@pilatin.com">belu@pilatin.com</a><br>
+  📍 Estudio Pilatin — Gobernador Gálvez, Santa Fe, Argentina</p>
+
+  <a class="back" href="/">← Volver al inicio</a>
+</div>
+</body>
+</html>
