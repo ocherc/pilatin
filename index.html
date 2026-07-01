@@ -19,17 +19,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ── AUTH ── */
-.auth-wrap{display:flex;min-height:100vh;background:url('https://images.unsplash.com/photo-1747239069226-55382c570116?auto=format&fit=crop&w=1920&q=80') center top/cover no-repeat;position:relative}
+.auth-wrap{display:flex;min-height:100vh;background:url('https://images.unsplash.com/photo-1747240549807-fc3962949818?auto=format&fit=crop&w=1920&q=80') center center/cover no-repeat;position:relative}
 .auth-wrap::before{content:'';position:absolute;inset:0;background:rgba(0,0,0,0.52);z-index:0}
 .auth-left{flex:1;display:flex;flex-direction:column;justify-content:center;padding:60px;color:#fff;position:relative;z-index:1}
 .auth-left .brand{font-size:3rem;font-weight:700;font-family:Georgia,'Times New Roman',serif;letter-spacing:-1px;text-transform:none;opacity:1;color:#fff;margin-bottom:16px}
 .auth-left h1{font-size:1.5rem;font-weight:400;line-height:1.35;color:rgba(255,255,255,0.85);margin-bottom:10px}
 .auth-left p{font-size:.9rem;opacity:.6;max-width:280px;line-height:1.7}
 .auth-right{width:440px;background:rgba(255,255,255,0.95);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);display:flex;flex-direction:column;justify-content:center;padding:52px 48px;position:relative;z-index:1}
-.auth-footer{position:absolute;bottom:40px;left:60px}
-.auth-footer-ig{color:rgba(255,255,255,0.72);font-size:13px;text-decoration:none;display:flex;align-items:center;gap:6px;margin-bottom:6px}
-.auth-footer-ig:hover{color:#fff}
-.auth-footer-sg{opacity:.55;font-size:12px;margin-top:2px}
+.auth-ig-cta{margin-top:32px}
+.auth-ig-cta a{display:inline-flex;flex-direction:column;color:#fff;text-decoration:none;border:1.5px solid rgba(255,255,255,0.35);border-radius:12px;padding:14px 20px;transition:.2s}
+.auth-ig-cta a:hover{border-color:rgba(255,255,255,0.8);background:rgba(255,255,255,0.08)}
+.ig-label{font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:5px;display:flex;align-items:center;gap:5px}
+.ig-handle{font-size:1.2rem;font-weight:700;color:#fff;letter-spacing:-0.3px}
+.auth-footer{position:absolute;bottom:36px;left:60px}
+.auth-footer-sg{color:rgba(255,255,255,0.5);font-size:12px;text-decoration:none;display:flex;align-items:center;gap:5px}
+.auth-footer-sg:hover{color:rgba(255,255,255,0.85)}
 .form-title{font-size:1.45rem;font-weight:800;margin-bottom:5px}
 .form-sub{font-size:13px;color:var(--muted);margin-bottom:26px}
 .fg{margin-bottom:13px}
@@ -163,9 +167,14 @@ tr:hover td{background:#fafafa}
     <div class="brand">Pilatin</div>
     <h1>Reservá tu clase de Pilates</h1>
     <p>Gestioná tus turnos de forma fácil y rápida, las 24hs desde cualquier dispositivo.</p>
+    <div class="auth-ig-cta">
+      <a href="https://www.instagram.com/belen.fullbody/" target="_blank" rel="noopener">
+        <span class="ig-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/></svg> Seguinos en Instagram</span>
+        <span class="ig-handle">@belen.fullbody</span>
+      </a>
+    </div>
     <div class="auth-footer">
-      <a class="auth-footer-ig" href="https://www.instagram.com/belen.fullbody/" target="_blank" rel="noopener"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/></svg> @belen.fullbody</a>
-      <a class="auth-footer-ig auth-footer-sg" href="https://www.instagram.com/sgagents.ok/" target="_blank" rel="noopener"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/></svg> SG Agents · Creando Futuro</a>
+      <a class="auth-footer-sg" href="https://www.instagram.com/sgagents.ok/" target="_blank" rel="noopener"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/></svg> SG Agents · Creando Futuro</a>
     </div>
   </div>
   <div class="auth-right">
@@ -189,9 +198,14 @@ tr:hover td{background:#fafafa}
     <div class="brand">Pilatin</div>
     <h1>Tu primer clase te espera</h1>
     <p>Creá tu cuenta en segundos y empezá a reservar hoy mismo.</p>
+    <div class="auth-ig-cta">
+      <a href="https://www.instagram.com/belen.fullbody/" target="_blank" rel="noopener">
+        <span class="ig-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/></svg> Seguinos en Instagram</span>
+        <span class="ig-handle">@belen.fullbody</span>
+      </a>
+    </div>
     <div class="auth-footer">
-      <a class="auth-footer-ig" href="https://www.instagram.com/belen.fullbody/" target="_blank" rel="noopener"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/></svg> @belen.fullbody</a>
-      <a class="auth-footer-ig auth-footer-sg" href="https://www.instagram.com/sgagents.ok/" target="_blank" rel="noopener"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/></svg> SG Agents · Creando Futuro</a>
+      <a class="auth-footer-sg" href="https://www.instagram.com/sgagents.ok/" target="_blank" rel="noopener"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/></svg> SG Agents · Creando Futuro</a>
     </div>
   </div>
   <div class="auth-right">
@@ -218,9 +232,14 @@ tr:hover td{background:#fafafa}
     <div class="brand">Pilatin</div>
     <h1>¡Bienvenid@!</h1>
     <p>Completá tus datos para que Belu pueda reconocerte y ver tus turnos existentes.</p>
+    <div class="auth-ig-cta">
+      <a href="https://www.instagram.com/belen.fullbody/" target="_blank" rel="noopener">
+        <span class="ig-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/></svg> Seguinos en Instagram</span>
+        <span class="ig-handle">@belen.fullbody</span>
+      </a>
+    </div>
     <div class="auth-footer">
-      <a class="auth-footer-ig" href="https://www.instagram.com/belen.fullbody/" target="_blank" rel="noopener"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/></svg> @belen.fullbody</a>
-      <a class="auth-footer-ig auth-footer-sg" href="https://www.instagram.com/sgagents.ok/" target="_blank" rel="noopener"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/></svg> SG Agents · Creando Futuro</a>
+      <a class="auth-footer-sg" href="https://www.instagram.com/sgagents.ok/" target="_blank" rel="noopener"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/></svg> SG Agents · Creando Futuro</a>
     </div>
   </div>
   <div class="auth-right">
