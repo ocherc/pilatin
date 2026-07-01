@@ -742,6 +742,10 @@ async function doGoogleLogin() {
 
 async function onLogin() {
   curProfile = await fetchProfile(curUser.id);
+  if(curProfile && !curProfile.email && curUser.email) {
+    await sb.from('profiles').update({ email: curUser.email }).eq('id', curUser.id);
+    curProfile.email = curUser.email;
+  }
   if(!curProfile || !curProfile.phone) {
     loading(false);
     showPage('page-onboarding');
@@ -767,7 +771,7 @@ async function doCompleteProfile() {
   if(phone.length < 8) { showAlert('onb-err','Celular inválido. Ej: 3416438271'); return; }
   loading(true);
   const { error } = await sb.from('profiles').upsert({
-    id: curUser.id, nombre, apellido, phone, role: 'user'
+    id: curUser.id, email: curUser.email||'', nombre, apellido, phone, role: 'user'
   });
   if(error) { loading(false); showAlert('onb-err', error.message); return; }
   const claimed = await sb.rpc('claim_records_by_phone', { p_phone: phone });
