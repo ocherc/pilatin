@@ -695,6 +695,7 @@ async function doLogout() {
   loading(true);
   await sb.auth.signOut();
   curUser=null; curProfile=null;
+  document.getElementById('nav-admin')?.remove();
   loading(false);
   showPage('page-login');
 }
