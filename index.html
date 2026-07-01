@@ -48,6 +48,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .alert-e{background:#fef2f2;border:1px solid #fecaca;color:#dc2626;display:none}
 .alert-w{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
 .alert-s{background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;display:none}
+.divider{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--muted);font-size:12px}
+.divider::before,.divider::after{content:'';flex:1;border-top:1px solid var(--border)}
+.btn-google{background:#fff;color:#3c4043;border:1.5px solid var(--border)}.btn-google:hover:not(:disabled){background:#f8f9fa}
 
 /* ── APP ── */
 .app-wrap{min-height:100vh;background:#f3f4f6}
@@ -165,6 +168,8 @@ tr:hover td{background:#fafafa}
     <button class="btn btn-primary btn-w" onclick="doLogin()">Iniciar sesión</button>
     <div class="alert alert-s" id="login-ok"></div>
     <div class="form-footer"><a onclick="doForgotPassword()">¿Olvidaste tu contraseña?</a></div>
+    <div class="divider">o continuá con</div>
+    <button class="btn btn-google btn-w" onclick="doGoogleLogin()"><svg width="18" height="18" viewBox="0 0 18 18" style="flex-shrink:0"><path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z"/><path fill="#34A853" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 0 1-7.18-2.54H1.83v2.07A8 8 0 0 0 8.98 17z"/><path fill="#FBBC05" d="M4.5 10.52a4.8 4.8 0 0 1 0-3.04V5.41H1.83a8 8 0 0 0 0 7.18l2.67-2.07z"/><path fill="#EA4335" d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 0 0 1.83 5.4L4.5 7.49a4.77 4.77 0 0 1 4.48-3.31z"/></svg> Continuar con Google</button>
     <div class="form-footer">¿No tenés cuenta? <a onclick="showPage('page-register')">Registrate gratis</a></div>
   </div>
 </div>
@@ -188,7 +193,33 @@ tr:hover td{background:#fafafa}
     </div>
     <div class="fg"><label>Teléfono</label><input type="tel" id="reg-tel" placeholder="3416438271"><div style="font-size:11px;color:var(--muted);margin-top:4px">Sin el 0 de la característica y sin el 15. Ej: si tu número es <strong>0341 15-643-8271</strong> escribí <strong>3416438271</strong></div></div>
     <button class="btn btn-primary btn-w" onclick="doRegister()">Crear cuenta</button>
+    <div class="divider">o registrate con</div>
+    <button class="btn btn-google btn-w" onclick="doGoogleLogin()"><svg width="18" height="18" viewBox="0 0 18 18" style="flex-shrink:0"><path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z"/><path fill="#34A853" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 0 1-7.18-2.54H1.83v2.07A8 8 0 0 0 8.98 17z"/><path fill="#FBBC05" d="M4.5 10.52a4.8 4.8 0 0 1 0-3.04V5.41H1.83a8 8 0 0 0 0 7.18l2.67-2.07z"/><path fill="#EA4335" d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 0 0 1.83 5.4L4.5 7.49a4.77 4.77 0 0 1 4.48-3.31z"/></svg> Continuar con Google</button>
     <div class="form-footer">¿Ya tenés cuenta? <a onclick="showPage('page-login')">Iniciá sesión</a></div>
+  </div>
+</div>
+
+<!-- ══ ONBOARDING ══ -->
+<div id="page-onboarding" class="auth-wrap hidden">
+  <div class="auth-left">
+    <div class="brand">Pilatin</div>
+    <h1>¡Bienvenid@!</h1>
+    <p>Completá tus datos para que Belu pueda reconocerte y ver tus turnos existentes.</p>
+  </div>
+  <div class="auth-right">
+    <div class="form-title">Un último paso</div>
+    <div class="form-sub">Completá tu perfil para empezar a reservar.</div>
+    <div class="alert alert-e" id="onb-err"></div>
+    <div class="row2">
+      <div class="fg"><label>Nombre</label><input type="text" id="onb-nombre" placeholder="María"></div>
+      <div class="fg"><label>Apellido</label><input type="text" id="onb-apellido" placeholder="García"></div>
+    </div>
+    <div class="fg">
+      <label>Teléfono</label>
+      <input type="tel" id="onb-tel" placeholder="3416438271">
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Sin el 0 ni el 15. Ej: si es <strong>0341 15-643-8271</strong> escribí <strong>3416438271</strong></div>
+    </div>
+    <button class="btn btn-primary btn-w" onclick="doCompleteProfile()">Listo, quiero reservar →</button>
   </div>
 </div>
 
@@ -634,7 +665,7 @@ async function fetchProfile(uid) {
 // AUTH
 // ════════════════════════════════════════════════
 function showPage(id) {
-  ['page-login','page-register','page-app'].forEach(p =>
+  ['page-login','page-register','page-onboarding','page-app'].forEach(p =>
     document.getElementById(p).classList.toggle('hidden', p !== id)
   );
 }
@@ -700,12 +731,55 @@ async function doLogout() {
   showPage('page-login');
 }
 
+async function doGoogleLogin() {
+  loading(true);
+  const { error } = await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin }
+  });
+  if(error) { loading(false); showAlert('login-err', error.message); }
+}
+
 async function onLogin() {
+  curProfile = await fetchProfile(curUser.id);
+  if(!curProfile || !curProfile.phone) {
+    loading(false);
+    showPage('page-onboarding');
+    const meta = curUser.user_metadata || {};
+    const given  = meta.given_name  || (meta.full_name ? meta.full_name.split(' ')[0] : '') || '';
+    const family = meta.family_name || (meta.full_name ? meta.full_name.split(' ').slice(1).join(' ') : '') || '';
+    if(given)  document.getElementById('onb-nombre').value  = given;
+    if(family) document.getElementById('onb-apellido').value = family;
+    return;
+  }
+  await fetchAll();
+  loading(false);
+  showPage('page-app');
+  initApp();
+}
+
+async function doCompleteProfile() {
+  hideAlert('onb-err');
+  const nombre   = (document.getElementById('onb-nombre').value||'').trim();
+  const apellido = (document.getElementById('onb-apellido').value||'').trim();
+  const phone    = (document.getElementById('onb-tel').value||'').replace(/\D/g,'');
+  if(!nombre) { showAlert('onb-err','Escribí tu nombre.'); return; }
+  if(phone.length < 8) { showAlert('onb-err','Celular inválido. Ej: 3416438271'); return; }
+  loading(true);
+  const { error } = await sb.from('profiles').upsert({
+    id: curUser.id, nombre, apellido, phone, role: 'user'
+  });
+  if(error) { loading(false); showAlert('onb-err', error.message); return; }
+  const claimed = await sb.rpc('claim_records_by_phone', { p_phone: phone });
   curProfile = await fetchProfile(curUser.id);
   await fetchAll();
   loading(false);
   showPage('page-app');
   initApp();
+  const c = claimed.data;
+  if(c && (c.fijos + c.turnos) > 0) {
+    alert(`✅ ¡Encontramos tus turnos! Se vincularon ${c.fijos} turno${c.fijos!==1?'s':''} fijo${c.fijos!==1?'s':''} y ${c.turnos} turno${c.turnos!==1?'s':''} puntual${c.turnos!==1?'es':''} a tu cuenta.`);
+  }
 }
 
 // ════════════════════════════════════════════════
@@ -1622,77 +1696,3 @@ async function importarCancelaciones() {
       return (fp===phone||fp.endsWith(phone)||phone.endsWith(fp)) && f.hora===hora && f.dia===diaVal;
     });
     return {
-      user_id:  null,
-      nombre:   r['Nombre']||r['nombre']||'',
-      apellido: r['Apellido']||r['apellido']||'',
-      phone,
-      fecha:    fechaVal,
-      dia:      diaVal,
-      hora,
-      tipo:     esFijo ? 'fijo_puntual' : 'puntual',
-      multa:    false,
-    };
-  }).filter(r=>r.nombre&&r.fecha&&r.hora);
-  const { error } = await sb.from('cancelaciones').insert(records);
-  loading(false);
-  if(error){ showAlert('import-cancels-err','Error: '+error.message); return; }
-  const ok=document.getElementById('import-cancels-ok');
-  ok.textContent=`✅ ${records.length} cancelaciones importadas.`; ok.style.display='block';
-  await fetchAll();
-}
-async function importarTurnos() {
-  hideAlert('import-turnos-err'); hideAlert('import-turnos-ok');
-  const csv = document.getElementById('import-turnos-csv').value;
-  if(!csv.trim()) { showAlert('import-turnos-err','Pegá el contenido CSV primero.'); return; }
-  const { rows } = parseCSV(csv);
-  if(!rows.length) { showAlert('import-turnos-err','No se encontraron datos válidos.'); return; }
-  loading(true);
-  const records = rows.map(r=>({
-    user_id:null,
-    nombre:   r['Nombre']||r['nombre']||'',
-    apellido: r['Apellido']||r['apellido']||'',
-    phone:    cleanPhone(r['Celular']||r['celular']||''),
-    fecha:    r['Fecha']||r['fecha']||'',
-    dia:      normalizeDia(r['Dia']||r['dia']||''),
-    hora:     r['HoraInicio']||r['Hora']||r['hora']||'',
-  })).filter(r=>r.nombre&&r.fecha&&r.hora);
-  const { error } = await sb.from('turnos').insert(records);
-  loading(false);
-  if(error){ showAlert('import-turnos-err','Error: '+error.message); return; }
-  const ok=document.getElementById('import-turnos-ok');
-  ok.textContent=`✅ ${records.length} turnos importados.`; ok.style.display='block';
-  await fetchAll();
-}
-
-// ════════════════════════════════════════════════
-// INIT
-// ════════════════════════════════════════════════
-(async function init() {
-  loading(true);
-  try {
-    const { data: { session } } = await sb.auth.getSession();
-    if(session?.user) {
-      curUser=session.user;
-      curProfile=await fetchProfile(curUser.id);
-      await fetchAll();
-      loading(false);
-      showPage('page-app');
-      initApp();
-    } else {
-      loading(false);
-      showPage('page-login');
-    }
-  } catch(e) {
-    loading(false);
-    showPage('page-login');
-    console.error('Init error:', e);
-  }
-
-  // Auth state changes
-  sb.auth.onAuthStateChange(async(event, session)=>{
-    if(event==='SIGNED_OUT'){ showPage('page-login'); }
-  });
-})();
-</script>
-</body>
-</html>
