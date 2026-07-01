@@ -188,10 +188,10 @@ tr:hover td{background:#fafafa}
     <div class="fg"><label>E-mail</label><input type="email" id="reg-email" placeholder="tu@email.com"></div>
     <div class="fg"><label>Contraseña</label><input type="password" id="reg-pass" placeholder="Mínimo 8 caracteres"></div>
     <div class="row2">
-      <div class="fg"><label>Nombre</label><input type="text" id="reg-nombre" placeholder="María"></div>
-      <div class="fg"><label>Apellido</label><input type="text" id="reg-apellido" placeholder="García"></div>
+      <div class="fg"><label>Nombre</label><input type="text" id="reg-nombre"></div>
+      <div class="fg"><label>Apellido</label><input type="text" id="reg-apellido"></div>
     </div>
-    <div class="fg"><label>Teléfono</label><input type="tel" id="reg-tel" placeholder="3416438271"><div style="font-size:11px;color:var(--muted);margin-top:4px">Sin el 0 de la característica y sin el 15. Ej: si tu número es <strong>0341 15-643-8271</strong> escribí <strong>3416438271</strong></div></div>
+    <div class="fg"><label>Teléfono</label><input type="tel" id="reg-tel"><div style="font-size:11px;color:var(--muted);margin-top:4px">Sin el 0 de la característica y sin el 15. Ej: si tu número es <strong>0341 15-643-8271</strong> escribí <strong>3416438271</strong></div></div>
     <button class="btn btn-primary btn-w" onclick="doRegister()">Crear cuenta</button>
     <div class="divider">o registrate con</div>
     <button class="btn btn-google btn-w" onclick="doGoogleLogin()"><svg width="18" height="18" viewBox="0 0 18 18" style="flex-shrink:0"><path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z"/><path fill="#34A853" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 0 1-7.18-2.54H1.83v2.07A8 8 0 0 0 8.98 17z"/><path fill="#FBBC05" d="M4.5 10.52a4.8 4.8 0 0 1 0-3.04V5.41H1.83a8 8 0 0 0 0 7.18l2.67-2.07z"/><path fill="#EA4335" d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 0 0 1.83 5.4L4.5 7.49a4.77 4.77 0 0 1 4.48-3.31z"/></svg> Continuar con Google</button>
@@ -211,12 +211,12 @@ tr:hover td{background:#fafafa}
     <div class="form-sub">Completá tu perfil para empezar a reservar.</div>
     <div class="alert alert-e" id="onb-err"></div>
     <div class="row2">
-      <div class="fg"><label>Nombre</label><input type="text" id="onb-nombre" placeholder="María"></div>
-      <div class="fg"><label>Apellido</label><input type="text" id="onb-apellido" placeholder="García"></div>
+      <div class="fg"><label>Nombre</label><input type="text" id="onb-nombre"></div>
+      <div class="fg"><label>Apellido</label><input type="text" id="onb-apellido"></div>
     </div>
     <div class="fg">
       <label>Teléfono</label>
-      <input type="tel" id="onb-tel" placeholder="3416438271">
+      <input type="tel" id="onb-tel">
       <div style="font-size:11px;color:var(--muted);margin-top:4px">Sin el 0 ni el 15. Ej: si es <strong>0341 15-643-8271</strong> escribí <strong>3416438271</strong></div>
     </div>
     <button class="btn btn-primary btn-w" onclick="doCompleteProfile()">Listo, quiero reservar →</button>
